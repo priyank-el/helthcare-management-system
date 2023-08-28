@@ -9,10 +9,18 @@ const registerUserValidator = (req:Request,res:Response,next:any) => {
         password:'required',
         role:'required'
     }
-
     validation.validaeWithCallback(registerUser , req , res , next)
 }
+const loginUserValidator = (req:Request,res:Response,next:any) => {
+    const loginUser = {
+        email:'required|email',
+        password:'required'
+    }
+    validation.validaeWithCallback(loginUser , req , res , next)
+}
+
 
 export {
-    registerUserValidator
+    registerUserValidator,
+    loginUserValidator
 }

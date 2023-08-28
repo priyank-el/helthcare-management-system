@@ -20,6 +20,9 @@ const userSchema = new mongoose.Schema({
     otpVerification:{
         type:Boolean,
         default:false
+    },
+    token:{
+        type:String
     }
 },{
     timestamps:true
