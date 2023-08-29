@@ -8,6 +8,9 @@ import otpGenerator from 'otp-generator';
 import data from '../security/keys';
 import jwt from 'jsonwebtoken';
 import {createClient} from 'redis';
+import Doctor from "../models/doctor";
+import ReqAppointment from "../models/requestAppointment";
+import mongoose from "mongoose";
 
 const client = createClient()
 client.on('error', err => console.log('Redis Client Error', err));
@@ -223,11 +226,48 @@ const allDoctors = async (req:Request,res:Response) => {
    }
 }
 
-// const applyAppointment = async (req:Request,res:Response) => {
-//   const patient = await Patient.findOne({ email:req.body.email })
+const doctorDetails = async (req:Request,res:Response) => {
 
-//   // const appointment = await 
-// }
+  try {
+    const address:string = req.body.address;
+    const degree:string = req.body.degree;
+    
+    const isEmail = await Doctor.findOne({email:req.body.user.email})
+      if(isEmail) throw 'this email already in use..';
+      if(req.body.user.role == '64ec3838149724882c351e50'){
+        await Doctor.create({
+          name:req.body.user.fullname,
+          email:req.body.user.email,
+          address,
+          degree
+        })
+      }
+      else{
+        throw 'role should be doctor..'
+      }
+
+      successResponse(res,'doctor created..',201)
+  } catch (error) {
+    errorResponse(res,error,401)
+  }
+}
+
+const reqAppointmentByPatient = async (req:Request,res:Response) => {
+ try {
+   const patient = await Patient.findOne({email:req.body.user.email})
+ 
+   const id = req.body.id;
+   const doctorId = new mongoose.Types.ObjectId(id)
+ 
+   await ReqAppointment.create({
+     patientId:patient?._id,
+     doctorId
+   })
+   successResponse(res,'request sended..',200)
+ } catch (error) {
+    errorResponse(res,error,400)
+ }
+}
 
 export {
   registerUser,
@@ -237,5 +277,7 @@ export {
   updatePatientsDetails,
   deletePatientsDetails,
   viewPatient,
-  allDoctors
+  allDoctors,
+  doctorDetails,
+  reqAppointmentByPatient
 }

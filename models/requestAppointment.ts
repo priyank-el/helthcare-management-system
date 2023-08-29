@@ -13,3 +13,4 @@ const reqAppointment = new mongoose.Schema({
 {timestamps:true})
 
 const ReqAppointment = mongoose.model('ReqAppointment',reqAppointment)
+export default ReqAppointment
