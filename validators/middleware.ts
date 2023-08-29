@@ -19,7 +19,7 @@ Validator.registerAsync('isUniqueemail', async function (username , attribute , 
 // main function for do validation
 const validaeWithCallback = (rules:any,req:Request,res:Response,next:any) => {
     const validation = new Validator.default(req.body, rules, {});
-    validation.passes(() => next());
+     validation.passes(() => next());
     validation.fails(() => {
         sendError(req,res, formattedErrors(validation.errors.errors) )  }
     );

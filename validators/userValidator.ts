@@ -4,17 +4,41 @@ import { Request,Response } from "express"
 
 const registerUserValidator = (req:Request,res:Response,next:any) => {
     const registerUser = {
-        fullname:'required',
+        fullname:'required|string',
         email:'required|isUniqueemail:User,email',
-        password:'required',
-        role:'required'
+        password:'required|string',
+        role:'required|string'
     }
     validation.validaeWithCallback(registerUser , req , res , next)
+}
+
+const registerPatientValidator = (req:Request,res:Response,next:any) => {
+    const registerPatient = {
+        DOB:'required|string',
+        address:'required|string',
+        contact_no:'required|string',
+        medical_history:'required|string',
+        allergies:'required|string',
+        current_condition:'required|string'
+    }
+    validation.validaeWithCallback(registerPatient , req , res , next)
+}
+
+const updatePatientValidator = (req:Request,res:Response,next:any) => {
+    const updatePatient = {
+        DOB:'string',
+        address:'string',
+        contact_no:'string',
+        medical_history:'string',
+        allergies:'string',
+        current_condition:'string'
+    }
+    validation.validaeWithCallback(updatePatient , req , res , next)
 }
 const loginUserValidator = (req:Request,res:Response,next:any) => {
     const loginUser = {
         email:'required|email',
-        password:'required'
+        password:'required|string'
     }
     validation.validaeWithCallback(loginUser , req , res , next)
 }
@@ -22,5 +46,7 @@ const loginUserValidator = (req:Request,res:Response,next:any) => {
 
 export {
     registerUserValidator,
-    loginUserValidator
+    loginUserValidator,
+    registerPatientValidator,
+    updatePatientValidator
 }
