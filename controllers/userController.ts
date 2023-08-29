@@ -206,6 +206,29 @@ const viewPatient = async (req:Request,res:Response) => {
   }
 }
 
+const allDoctors = async (req:Request,res:Response) => {
+   try {
+    const doctors = await User.aggregate([
+     { $match : { role : '64ec3838149724882c351e50' } },
+     { $project : { 'fullname':1,'email':1 } }
+    ])
+    const message = doctors.length > 0 ? 'All doctors found..' : 'currently any doctor not available';
+    const response = {
+      message,
+      doctors
+    }
+    successResponse(res,response,200)
+   } catch (error) {
+      errorResponse(res,error,400)
+   }
+}
+
+// const applyAppointment = async (req:Request,res:Response) => {
+//   const patient = await Patient.findOne({ email:req.body.email })
+
+//   // const appointment = await 
+// }
+
 export {
   registerUser,
   verifyotp,
@@ -213,5 +236,6 @@ export {
   patiants,
   updatePatientsDetails,
   deletePatientsDetails,
-  viewPatient
+  viewPatient,
+  allDoctors
 }
