@@ -1,6 +1,6 @@
 import express from "express";
 
-import {registerUser,verifyotp,loginUser,patiants,updatePatientsDetails,deletePatientsDetails,viewPatient,allDoctors,doctorDetails,reqAppointmentByPatient} from '../../controllers/userController'
+import {registerUser,verifyotp,loginUser,patiants,updatePatientsDetails,deletePatientsDetails,viewPatient,allDoctors,doctorDetails,reqAppointmentByPatient,appointmentByDoctor,viewAppointmentByDoctor,updateAppointmentByDoctor,deleteAppointmentByDoctor,prescriptionByDoctor} from '../../controllers/userController'
 
 import {registerUserValidator,loginUserValidator,registerPatientValidator,updatePatientValidator,registerDoctorValidator} from '../../validators/userValidator'
 
@@ -19,5 +19,12 @@ router.get('/view-patient',jwtAuth,viewPatient)
 router.get('/view-all-doctors',jwtAuth,allDoctors)
 
 router.post('/apply-appointment',jwtAuth,reqAppointmentByPatient)
+
+router.get('/appointment-data',jwtAuth,viewAppointmentByDoctor)
+router.put('/appointment',jwtAuth,appointmentByDoctor)
+router.put('/update-appointment',jwtAuth,updateAppointmentByDoctor)
+router.put('/delete-appointment',jwtAuth,deleteAppointmentByDoctor)
+
+router.post('/priscription',jwtAuth,prescriptionByDoctor)
 
 export default router;

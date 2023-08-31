@@ -11,6 +11,7 @@ import {createClient} from 'redis';
 import Doctor from "../models/doctor";
 import ReqAppointment from "../models/requestAppointment";
 import mongoose from "mongoose";
+import Priscription from "../models/priscription";
 
 const client = createClient()
 client.on('error', err => console.log('Redis Client Error', err));
@@ -101,13 +102,16 @@ const loginUser = async (req:Request,res:Response) => {
   
     if(!pass) throw 'password miss matched..';
 
+    if(isUser?.otpVerification == false) throw 'otp verification required..'
+
     const token = jwt.sign({ email }  , data.SECRET_KEY );
     await client.connect();
     // res.cookie('JwtToken',token)    // store jwt token inside cookies
     await client.set('token', token);
-  
+    await client.disconnect()
     successResponse(res,`${isUser?.fullname} loged in..` , 200)
-  } catch (error) {
+  } catch (error:any) {
+    console.log(error.message);
     errorResponse(res,error,400)
   }
 }
@@ -122,6 +126,7 @@ const patiants = async (req:Request,res:Response) => {
     const medical_history:string = req.body.medical_history;
     const allergies:string = req.body.allergies;
     const current_condition:string = req.body.current_condition;
+    const diagnosis = req.body.diagnosis;
   
     if(user?.role == '64ec3894149724882c351e56') {
       const uniqueEmail = user.email
@@ -138,7 +143,8 @@ const patiants = async (req:Request,res:Response) => {
         allergies,
         current_condition,
         userId:user._id,
-        email:user.email
+        email:user.email,
+        diagnosis
       })
     }else{
       console.log("not patient..");
@@ -258,13 +264,156 @@ const reqAppointmentByPatient = async (req:Request,res:Response) => {
  
    const id = req.body.id;
    const doctorId = new mongoose.Types.ObjectId(id)
+   const appointmentDate = req.body.appointmentDate;
  
    await ReqAppointment.create({
      patientId:patient?._id,
-     doctorId
+     doctorId,
+     appointmentDate
    })
    successResponse(res,'request sended..',200)
  } catch (error) {
+    errorResponse(res,error,400)
+ }
+}
+
+const appointmentByDoctor = async (req:Request,res:Response) => {
+  try {
+    // const doctor = await Doctor.findOne({email : req.body.user.email})
+    const status = req.body.status;
+    const id = req.body.appointId
+    const _id = new mongoose.Types.ObjectId(id)
+
+    const timeDuration = req.body.timeDuration 
+    ? await ReqAppointment.findOneAndUpdate({ _id },{
+      status,
+      timeDuration:req.body.timeDuration
+    })
+    : await ReqAppointment.findOneAndUpdate({ _id },{
+      status
+    })
+
+    successResponse(res,'view and moodify appointment by doctor..',200)
+  } catch (error) {
+    errorResponse(res,error,400)
+  }
+}
+
+const viewAppointmentByDoctor = async (req:Request,res:Response) => { 
+  try {
+    const doctor = await Doctor.findOne({email:req.body.user.email})
+    const searchData = req.query.search
+      ? {
+          $match: {
+            $or: [
+              { status: req.query.search },
+              { appointmentDate: req.query.search }
+            ],
+          },
+        }
+      : { $match: {} };
+
+    const appointments = await ReqAppointment.aggregate([
+      { $match : { doctorId: doctor?._id} },
+      { $lookup : {
+        from: "patients",
+        localField: "patientId",
+        foreignField: "_id",
+        as: "patient"
+        } 
+      },
+      { $project : {
+         "appointmentDate" : 1, 
+         "timeDuration" : 1 , 
+         "status" : 1 , 
+         "patient" :1 ,
+         "createdAt" : 1 ,
+         "notesForRejection":1
+        } 
+      },
+      { $unwind : "$patient"},
+      searchData
+    ]).project({
+      "patient._id" : 0,
+      "patient.createdAt" : 0,
+      "patient.updatedAt" : 0,
+      "patient.__v" : 0,
+      "patient.userId" : 0,
+      "patient.email" : 0,
+    })
+  
+    const response = {
+      msg:'all doctor appointment found..',
+      appointments
+    }
+
+    successResponse(res,response,200)
+  } catch (error) {
+    errorResponse(res,error,400)
+  }
+}
+
+const updateAppointmentByDoctor = async (req:Request,res:Response) => {
+  try {
+    // const doctor = await Doctor.findOne({email:req.body.user.email}) 
+    const id = new mongoose.Types.ObjectId(req.body.id);
+    const timeDuration = req.body.timeDuration;
+  
+    await ReqAppointment.findByIdAndUpdate(id,{
+      timeDuration
+    })
+
+    successResponse(res,'updated done..',200)
+  } catch (error) {
+    errorResponse(res,error,400)
+  }
+}
+
+const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
+  try {
+    // const doctor = await Doctor.findOne({email:req.body.user.email}) 
+    const appointId:any = req.body.id;
+    const notes:string = req.body.notes;
+    const id = new mongoose.Types.ObjectId(appointId);
+  
+    await ReqAppointment.findByIdAndUpdate(id,{
+      timeDuration:null,
+      status:'reject',
+      notesForRejection:notes
+    })
+
+    successResponse(res,'updated done..',200)
+  } catch (error) {
+    errorResponse(res,error,400)
+  }
+}
+
+const prescriptionByDoctor = async (req:Request,res:Response) => {
+ try {
+   const doctor = await Doctor.findOne({email:req.body.user.email});
+   if(!doctor) throw 'doctor not found..'
+   const patientId = new mongoose.Types.ObjectId(req.body.patientId);
+
+   const patient = await Patient.findById(patientId)
+
+   const medications = req.body.medications;
+   const dosages = req.body.dosages;
+   const frequency = req.body.frequency;
+   const durations = req.body.durations;
+ 
+   await Priscription.create({
+     medications,
+     dosages,
+     frequency,
+     durations,
+     doctorId:doctor?._id,
+     patientId,
+     diagnosis:patient?.diagnosis
+   })
+
+   successResponse(res,'priscription created..',200)
+ } catch (error:any) {
+  console.log(error.message);
     errorResponse(res,error,400)
  }
 }
@@ -279,5 +428,10 @@ export {
   viewPatient,
   allDoctors,
   doctorDetails,
-  reqAppointmentByPatient
+  reqAppointmentByPatient,
+  appointmentByDoctor,
+  viewAppointmentByDoctor,
+  updateAppointmentByDoctor,
+  deleteAppointmentByDoctor,
+  prescriptionByDoctor
 }

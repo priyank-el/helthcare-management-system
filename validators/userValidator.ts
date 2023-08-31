@@ -18,7 +18,6 @@ const registerPatientValidator = (req:Request,res:Response,next:any) => {
         address:'required|string',
         contact_no:'required|string',
         medical_history:'required|string',
-        allergies:'required|string',
         current_condition:'required|string'
     }
     validation.validaeWithCallback(registerPatient , req , res , next)
@@ -38,7 +37,6 @@ const updatePatientValidator = (req:Request,res:Response,next:any) => {
         address:'string',
         contact_no:'string',
         medical_history:'string',
-        allergies:'string',
         current_condition:'string'
     }
     validation.validaeWithCallback(updatePatient , req , res , next)

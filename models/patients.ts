@@ -28,6 +28,9 @@ const patientsSchema = new mongoose.Schema({
     },
     email:{
         type:String
+    },
+    diagnosis:{
+        type:String
     }
 },
 {timestamps:true})
