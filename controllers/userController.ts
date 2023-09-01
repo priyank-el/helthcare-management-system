@@ -12,6 +12,8 @@ import Doctor from "../models/doctor";
 import ReqAppointment from "../models/requestAppointment";
 import mongoose from "mongoose";
 import Priscription from "../models/priscription";
+import Role from "../models/roles";
+import MedicalHistory from "../models/medicalHistory";
 
 const client = createClient()
 client.on('error', err => console.log('Redis Client Error', err));
@@ -21,6 +23,18 @@ const TokenGenerator = require("token-generator")({
   timestampMap: "abcdefghij", // 10 chars array for obfuscation proposes
 });
 const bcrypt = require('bcrypt');
+
+const viewAllRoles = async (req:Request,res:Response) => {
+  try {
+    const allRoles = await Role.find().select({
+      '__v' : 0
+    })
+
+    successResponse(res,allRoles,200)
+  } catch (error:any) {
+      errorResponse(res,error,400)
+  }
+}
 
 const registerUser = async (req: Request, res: Response) => {
   try {
@@ -67,7 +81,12 @@ const registerUser = async (req: Request, res: Response) => {
       otp,
       token
     });
-    successResponse(res,`${user.fullname} registered..`,201)
+
+    const response = {
+      msg: `${user.fullname} registered..`,
+      token
+    }
+    successResponse(res,response,201)
   } catch (error) {
     errorResponse(res, error, 401)
   }
@@ -127,12 +146,9 @@ const patiants = async (req:Request,res:Response) => {
     const allergies:string = req.body.allergies;
     const current_condition:string = req.body.current_condition;
     const diagnosis = req.body.diagnosis;
-  
-    if(user?.role == '64ec3894149724882c351e56') {
-      const uniqueEmail = user.email
-      const isPatient = await Patient.findOne({ email : uniqueEmail })
 
-      if(isPatient) throw `email already in use..`;
+        const isPatient = await Patient.findOne({ email : req.body.user.email })
+        if(isPatient) throw `email already in use..`;
 
       await Patient.create({
         nickname:user.fullname,
@@ -146,10 +162,7 @@ const patiants = async (req:Request,res:Response) => {
         email:user.email,
         diagnosis
       })
-    }else{
-      console.log("not patient..");
-      throw "not patient.."
-    }
+
     successResponse(res,'patient record inserted..',200)
   } catch (error:any) {
     errorResponse(res,error,401)
@@ -167,8 +180,6 @@ const updatePatientsDetails = async (req:Request,res:Response) => {
     const allergies:string = req.body.allergies;
     const current_condition:string = req.body.current_condition;
   
-    if(user?.role == '64ec3894149724882c351e56') {
-      
       await Patient.findOneAndUpdate( {email :user.email} ,{
         nickname:user.fullname,
         DOB,
@@ -180,10 +191,7 @@ const updatePatientsDetails = async (req:Request,res:Response) => {
         userId:user._id,
         email:user.email
       })
-    }else{
-      console.log("not patient..");
-      throw "not patient.."
-    }
+  
     successResponse(res,'patient data updated...',200)
   } catch (error) {
     errorResponse(res,error,400)
@@ -215,12 +223,62 @@ const viewPatient = async (req:Request,res:Response) => {
   }
 }
 
+const viewAllPateints = async (req:Request,res:Response) => {
+ try {
+    const searchData = req.query.search
+    ? {
+          $match: {
+            $or: [
+              { nickname: req.query.search },
+              { contact_no: req.query.search },
+              { address: req.query.search },
+              { diagnosis: req.query.search },
+              { allergies: req.query.search }
+            ],
+          },
+        }
+    : { $match: {} };
+
+   const patien = await Patient.aggregate([
+    { $match:{} },
+    { $project : {
+      'userId': 0,
+      'createdAt': 0,
+      'email': 0,
+      'updatedAt': 0,
+      '__v': 0
+    } },
+    searchData
+   ]);
+
+   for(let i=0;i<patien.length;i++){
+      const isMedical = await MedicalHistory.findOne({patientId:patien[0]._id});
+
+      if(isMedical){
+        patien[0].medical_history = isMedical
+      }
+   }
+ 
+   const response = {
+     msg:'found all patients..',
+     patien
+   } 
+   successResponse(res,response,200)
+ } catch (error:any) {
+    console.log(error.message);
+    errorResponse(res,error,400)
+ }
+}
+
 const allDoctors = async (req:Request,res:Response) => {
    try {
-    const doctors = await User.aggregate([
-     { $match : { role : '64ec3838149724882c351e50' } },
-     { $project : { 'fullname':1,'email':1 } }
-    ])
+    const doctors = await Doctor
+    .find()
+    .select({
+      updatedAt:0,
+      createdAt:0,
+      __v:0,
+    });
     const message = doctors.length > 0 ? 'All doctors found..' : 'currently any doctor not available';
     const response = {
       message,
@@ -233,24 +291,19 @@ const allDoctors = async (req:Request,res:Response) => {
 }
 
 const doctorDetails = async (req:Request,res:Response) => {
-
   try {
     const address:string = req.body.address;
     const degree:string = req.body.degree;
     
     const isEmail = await Doctor.findOne({email:req.body.user.email})
       if(isEmail) throw 'this email already in use..';
-      if(req.body.user.role == '64ec3838149724882c351e50'){
+      
         await Doctor.create({
           name:req.body.user.fullname,
           email:req.body.user.email,
           address,
           degree
         })
-      }
-      else{
-        throw 'role should be doctor..'
-      }
 
       successResponse(res,'doctor created..',201)
   } catch (error) {
@@ -258,16 +311,13 @@ const doctorDetails = async (req:Request,res:Response) => {
   }
 }
 
-const reqAppointmentByPatient = async (req:Request,res:Response) => {
+const reqAppointmentByUser = async (req:Request,res:Response) => {
  try {
-   const patient = await Patient.findOne({email:req.body.user.email})
- 
-   const id = req.body.id;
-   const doctorId = new mongoose.Types.ObjectId(id)
+   const doctorId = new mongoose.Types.ObjectId(req.body.id)
    const appointmentDate = req.body.appointmentDate;
  
    await ReqAppointment.create({
-     patientId:patient?._id,
+     userId:req.body.user?._id,
      doctorId,
      appointmentDate
    })
@@ -277,12 +327,28 @@ const reqAppointmentByPatient = async (req:Request,res:Response) => {
  }
 }
 
+const reqAppointmentByPatient = async (req:Request,res:Response) => {
+  try {
+    const doctorId = new mongoose.Types.ObjectId(req.body.id)
+    const appointmentDate = req.body.appointmentDate;
+  
+    await ReqAppointment.create({
+      patientId:req.body.patient?._id,
+      doctorId,
+      appointmentDate
+    })
+    successResponse(res,'request sended..',200)
+  } catch (error) {
+     errorResponse(res,error,400)
+  }
+ }
+
 const appointmentByDoctor = async (req:Request,res:Response) => {
   try {
-    // const doctor = await Doctor.findOne({email : req.body.user.email})
     const status = req.body.status;
-    const id = req.body.appointId
-    const _id = new mongoose.Types.ObjectId(id)
+    const _id = new mongoose.Types.ObjectId(req.body.appointId)
+
+    const appointmentData = await ReqAppointment.findById(_id)
 
     const timeDuration = req.body.timeDuration 
     ? await ReqAppointment.findOneAndUpdate({ _id },{
@@ -293,6 +359,30 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
       status
     })
 
+    const patient = await Patient.findById(appointmentData?.patientId)
+
+    if(status == 'approve'){
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: data.ADMIN_EMAIL,
+          pass: data.ADMIN_PASS,
+        },
+      });
+  
+      try {
+        await transporter.sendMail({
+          from: data.ADMIN_EMAIL, // sender address
+          to: patient?.email, // list of receivers
+          subject: "Appointment approved ✔", // Subject line
+          text: `Dr.${req.body.doctor.name} accept your appointment..`, // plain text body
+        });
+      } catch (error) {
+        console.log(error);
+        throw 'mail not send because of invalid credentials..'
+      }
+    }
+
     successResponse(res,'view and moodify appointment by doctor..',200)
   } catch (error) {
     errorResponse(res,error,400)
@@ -301,8 +391,7 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
 
 const viewAppointmentByDoctor = async (req:Request,res:Response) => { 
   try {
-    const doctor = await Doctor.findOne({email:req.body.user.email})
-    const searchData = req.query.search
+    const searchData =  req.query.search
       ? {
           $match: {
             $or: [
@@ -314,7 +403,7 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
       : { $match: {} };
 
     const appointments = await ReqAppointment.aggregate([
-      { $match : { doctorId: doctor?._id} },
+      { $match : { doctorId: req.body.doctor?._id} },
       { $lookup : {
         from: "patients",
         localField: "patientId",
@@ -332,6 +421,7 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
         } 
       },
       { $unwind : "$patient"},
+      { $sort : { createdAt : -1 } },
       searchData
     ]).project({
       "patient._id" : 0,
@@ -355,7 +445,6 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
 
 const updateAppointmentByDoctor = async (req:Request,res:Response) => {
   try {
-    // const doctor = await Doctor.findOne({email:req.body.user.email}) 
     const id = new mongoose.Types.ObjectId(req.body.id);
     const timeDuration = req.body.timeDuration;
   
@@ -371,16 +460,41 @@ const updateAppointmentByDoctor = async (req:Request,res:Response) => {
 
 const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
   try {
-    // const doctor = await Doctor.findOne({email:req.body.user.email}) 
-    const appointId:any = req.body.id;
     const notes:string = req.body.notes;
-    const id = new mongoose.Types.ObjectId(appointId);
-  
-    await ReqAppointment.findByIdAndUpdate(id,{
+    const id = new mongoose.Types.ObjectId(req.body.id);
+    
+    const appointmentData = await ReqAppointment.findById(id)
+
+    const appointment = await ReqAppointment.findByIdAndUpdate(id,{
       timeDuration:null,
       status:'reject',
       notesForRejection:notes
     })
+    const newAppointment = await ReqAppointment.findById(id)
+    const patient = await Patient.findById(appointmentData?.userId)
+
+    if(newAppointment?.status == 'reject'){
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: data.ADMIN_EMAIL,
+          pass: data.ADMIN_PASS,
+        },
+      });
+  
+      try {
+        await transporter.sendMail({
+          from: data.ADMIN_EMAIL, // sender address
+          to: patient?.email, // list of receivers
+          subject: "Appointment rejected ✔", // Subject line
+          text: `Dr.${req.body.doctor.name} temparary rejected your appointment.. ${notes}`, // plain text body
+        });
+      } catch (error) {
+        console.log(error);
+        throw 'mail not send because of invalid credentials..'
+      }
+    }
+
 
     successResponse(res,'updated done..',200)
   } catch (error) {
@@ -390,8 +504,6 @@ const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
 
 const prescriptionByDoctor = async (req:Request,res:Response) => {
  try {
-   const doctor = await Doctor.findOne({email:req.body.user.email});
-   if(!doctor) throw 'doctor not found..'
    const patientId = new mongoose.Types.ObjectId(req.body.patientId);
 
    const patient = await Patient.findById(patientId)
@@ -406,7 +518,7 @@ const prescriptionByDoctor = async (req:Request,res:Response) => {
      dosages,
      frequency,
      durations,
-     doctorId:doctor?._id,
+     doctorId:req.body.doctor?._id,
      patientId,
      diagnosis:patient?.diagnosis
    })
@@ -418,7 +530,39 @@ const prescriptionByDoctor = async (req:Request,res:Response) => {
  }
 }
 
+const medicalHistory = async (req:Request,res:Response) => {
+  try {
+    const patientId = new mongoose.Types.ObjectId(req.body.patientId);
+  
+    const appointments = await ReqAppointment.aggregate([
+      { $match : { patientId:patientId } },
+      { $project:{
+          'patientId':0,
+          'updatedAt':0,
+          '__v':0
+      } }
+    ])
+
+    const priscription = await Priscription.findOne({patientId})
+    .select({
+      '_id':0,
+      'patientId':0,
+      '__v':0
+    })
+    const medicalHistory = await MedicalHistory.create({
+      appointments,
+      priscription,
+      patientId:patientId
+    })
+    successResponse(res,medicalHistory,200)
+  } catch (error:any) {
+    console.log(error.message);
+      errorResponse(res,error,400)
+  } 
+}
+
 export {
+  viewAllRoles,
   registerUser,
   verifyotp,
   loginUser,
@@ -428,10 +572,13 @@ export {
   viewPatient,
   allDoctors,
   doctorDetails,
-  reqAppointmentByPatient,
+  reqAppointmentByUser,
   appointmentByDoctor,
   viewAppointmentByDoctor,
   updateAppointmentByDoctor,
   deleteAppointmentByDoctor,
-  prescriptionByDoctor
+  prescriptionByDoctor,
+  viewAllPateints,
+  medicalHistory,
+  reqAppointmentByPatient
 }

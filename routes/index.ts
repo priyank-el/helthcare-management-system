@@ -13,6 +13,7 @@ router.post('/role' , async (req:Request , res:Response) => {
         successResponse(res,`${role} created..`,201)
 
     } catch (error:any) {
+        console.log(error.message);
         errorResponse(res,error,401)
     }
 })

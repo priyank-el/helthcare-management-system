@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const roleSchma = new mongoose.Schema({
     role : {
-        type : String
+        type : String,
+        enum:['Doctor','Patient','Administrator','Nurse']
     }
 });
 

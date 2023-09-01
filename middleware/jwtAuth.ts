@@ -25,7 +25,7 @@ module.exports = async (req:Request, res:Response, next:any) => {
             const error = new Error('User not found...')
             throw error
         }
-
+        
         req.body.user = userRecord
         next()
     } catch (error:any) {

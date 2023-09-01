@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const reqAppointment = new mongoose.Schema({
+    userId:{
+        type:mongoose.Types.ObjectId,
+        ref:'User'
+    },
     patientId:{
         type:mongoose.Types.ObjectId,
         ref:'Patient'
@@ -22,6 +26,10 @@ const reqAppointment = new mongoose.Schema({
     },
     notesForRejection:{
         type:String
+    },
+    atended:{
+        type:Boolean,
+        default:false
     }
 },
 {timestamps:true})

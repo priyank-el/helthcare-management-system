@@ -1,30 +1,41 @@
 import express from "express";
 
-import {registerUser,verifyotp,loginUser,patiants,updatePatientsDetails,deletePatientsDetails,viewPatient,allDoctors,doctorDetails,reqAppointmentByPatient,appointmentByDoctor,viewAppointmentByDoctor,updateAppointmentByDoctor,deleteAppointmentByDoctor,prescriptionByDoctor} from '../../controllers/userController'
+import {viewAllRoles,medicalHistory,registerUser,verifyotp,loginUser,reqAppointmentByPatient,patiants,updatePatientsDetails,deletePatientsDetails,viewPatient,allDoctors,doctorDetails,viewAllPateints,reqAppointmentByUser,appointmentByDoctor,viewAppointmentByDoctor,updateAppointmentByDoctor,deleteAppointmentByDoctor,prescriptionByDoctor} from '../../controllers/userController'
 
 import {registerUserValidator,loginUserValidator,registerPatientValidator,updatePatientValidator,registerDoctorValidator} from '../../validators/userValidator'
 
 const jwtAuth = require('../../middleware/jwtAuth')
-const router = express.Router()
+const patientAuth = require('../../middleware/auth/patientsAuth')
+const doctorAuth = require('../../middleware/auth/doctorAuth')
 
+const router = express.Router()
+router.get('/all-roles' , viewAllRoles )
 router.post('/register',registerUserValidator,registerUser);
 router.post('/verify',verifyotp);
 router.post('/login',loginUserValidator,loginUser)
+router.post('/apply-appointment',jwtAuth,reqAppointmentByUser)
+
+// ? <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PATIENTS APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 router.post('/patient',jwtAuth,registerPatientValidator,patiants)
-router.post('/doctor',jwtAuth,registerDoctorValidator,doctorDetails)
-router.put('/update-patient',jwtAuth,updatePatientValidator,updatePatientsDetails)
+router.put('/update-patient',jwtAuth,patientAuth,updatePatientValidator,updatePatientsDetails)
 router.delete('/delete-patient/:id',jwtAuth,deletePatientsDetails)
-router.get('/view-patient',jwtAuth,viewPatient)
+router.get('/view-patient',jwtAuth,patientAuth,viewPatient)
+router.post('/apply-appoint',jwtAuth,patientAuth,reqAppointmentByPatient)
+
 router.get('/view-all-doctors',jwtAuth,allDoctors)
 
-router.post('/apply-appointment',jwtAuth,reqAppointmentByPatient)
+// ? <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< DOCTORS APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-router.get('/appointment-data',jwtAuth,viewAppointmentByDoctor)
-router.put('/appointment',jwtAuth,appointmentByDoctor)
-router.put('/update-appointment',jwtAuth,updateAppointmentByDoctor)
-router.put('/delete-appointment',jwtAuth,deleteAppointmentByDoctor)
+router.get('/all-patients',jwtAuth,viewAllPateints)
+router.post('/doctor',jwtAuth,registerDoctorValidator,doctorDetails)
+router.get('/appointment-data',jwtAuth,doctorAuth,viewAppointmentByDoctor)
+router.put('/appointment',jwtAuth,doctorAuth,appointmentByDoctor)
+router.put('/update-appointment',jwtAuth,doctorAuth,updateAppointmentByDoctor)
+router.put('/delete-appointment',jwtAuth,doctorAuth,deleteAppointmentByDoctor)
 
-router.post('/priscription',jwtAuth,prescriptionByDoctor)
+router.post('/priscription',jwtAuth,doctorAuth,prescriptionByDoctor)
+
+router.post('/medical-history',jwtAuth,medicalHistory)
 
 export default router;

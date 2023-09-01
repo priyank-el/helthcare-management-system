@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
     },
     role:{
         type:String,
-        enum:['64ec3838149724882c351e50','64ec3838149724882c351e50','64ec387a149724882c351e54','64ec3894149724882c351e56']
+        enum:['64f17ae8dc6c9c2bbcfeb113','64f17b669cc1af572a06a24e','64f17b729cc1af572a06a250','64f17b7e9cc1af572a06a252']
     },
     otp:{
         type:String
