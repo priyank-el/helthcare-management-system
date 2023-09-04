@@ -1,8 +1,8 @@
 import express from "express";
 
-import {viewAllRoles,medicalHistory,registerUser,verifyotp,loginUser,reqAppointmentByPatient,patiants,updatePatientsDetails,deletePatientsDetails,viewPatient,allDoctors,doctorDetails,viewAllPateints,reqAppointmentByUser,appointmentByDoctor,viewAppointmentByDoctor,updateAppointmentByDoctor,deleteAppointmentByDoctor,prescriptionByDoctor,feedbackBypatient} from '../../controllers/userController'
+import {viewAllRoles,medicalHistory,registerUser,verifyotp,loginUser,reqAppointmentByPatient,patiants,updatePatientsDetails,deletePatientsDetails,viewPatient,allDoctors,doctorDetails,viewAllPateints,reqAppointmentByUser,appointmentByDoctor,viewAppointmentByDoctor,updateAppointmentByDoctor,deleteAppointmentByDoctor,prescriptionByDoctor,feedbackBypatient,emergency} from '../../controllers/userController'
 
-import {registerUserValidator,loginUserValidator,registerPatientValidator,updatePatientValidator,registerDoctorValidator} from '../../validators/userValidator'
+import {registerUserValidator,loginUserValidator,registerPatientValidator,updatePatientValidator,registerDoctorValidator,emergencyValidator,feedbackValidator} from '../../validators/userValidator'
 
 const jwtAuth = require('../../middleware/jwtAuth')
 const patientAuth = require('../../middleware/auth/patientsAuth')
@@ -38,6 +38,8 @@ router.post('/priscription',jwtAuth,doctorAuth,prescriptionByDoctor)
 
 router.post('/medical-history',jwtAuth,medicalHistory)
 
-router.post('/feedback',jwtAuth,patientAuth,feedbackBypatient)
+router.post('/feedback',jwtAuth,patientAuth,feedbackValidator,feedbackBypatient)
+
+router.post('/emergency',jwtAuth,emergencyValidator,emergency)
 
 export default router;

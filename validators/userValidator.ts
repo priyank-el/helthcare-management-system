@@ -38,6 +38,15 @@ const feedbackValidator = (req:Request,res:Response,next:any) => {
     validation.validaeWithCallback(feedback , req , res , next)
 }
 
+const emergencyValidator = (req:Request,res:Response,next:any) => {
+    const emergency = {
+        reason:'required|string',
+        age:'required|string',
+        contact:'required|string'
+    }
+    validation.validaeWithCallback(emergency , req , res , next)
+}
+
 const updatePatientValidator = (req:Request,res:Response,next:any) => {
     const updatePatient = {
         DOB:'string',
@@ -63,5 +72,6 @@ export {
     registerPatientValidator,
     registerDoctorValidator,
     updatePatientValidator,
-    feedbackValidator
+    feedbackValidator,
+    emergencyValidator
 }

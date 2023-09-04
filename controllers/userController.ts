@@ -16,6 +16,7 @@ import Role from "../models/roles";
 import MedicalHistory from "../models/medicalHistory";
 import i18n from "i18n";
 import Feedback from "../models/feedBack";
+import Emergency from "../models/emergency";
 
 const client = createClient()
 client.on('error', err => console.log('Redis Client Error', err));
@@ -585,6 +586,31 @@ const feedbackBypatient = async (req:Request,res:Response) => {
   }
 }
 
+const emergency = async (req:Request,res:Response) => {
+ try {
+   const reason:string = req.body.reason;
+   const age:string  = req.body.age;
+   const contactNO = req.body.contact;
+
+  const isExist = await Emergency.findOne({
+    userId:req.body.user._id
+  })
+
+  if(isExist) throw i18n.__('isPateint')
+
+   await Emergency.create({
+     userId:req.body.user._id,
+     reason,
+     age,
+     contactNO
+   })
+   
+   successResponse(res,i18n.__('created-emergency'),200)
+ } catch (error:any) {
+    errorResponse(res,error,400)
+ }
+}
+
 export {
   viewAllRoles,
   registerUser,
@@ -605,5 +631,6 @@ export {
   viewAllPateints,
   medicalHistory,
   reqAppointmentByPatient,
-  feedbackBypatient
+  feedbackBypatient,
+  emergency
 }
