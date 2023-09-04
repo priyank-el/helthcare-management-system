@@ -14,6 +14,8 @@ import mongoose from "mongoose";
 import Priscription from "../models/priscription";
 import Role from "../models/roles";
 import MedicalHistory from "../models/medicalHistory";
+import i18n from "i18n";
+import Feedback from "../models/feedBack";
 
 const client = createClient()
 client.on('error', err => console.log('Redis Client Error', err));
@@ -83,7 +85,7 @@ const registerUser = async (req: Request, res: Response) => {
     });
 
     const response = {
-      msg: `${user.fullname} registered..`,
+      msg: `${user.fullname} ${i18n.__('register')}`,
       token
     }
     successResponse(res,response,201)
@@ -105,7 +107,7 @@ try {
       otpVerification :true
     })
   
-    successResponse(res,'otp verified..',200)
+    successResponse(res,i18n.__('verify-otp'),200)
 } catch (error) {
     errorResponse(res,error,400)
 }
@@ -128,7 +130,7 @@ const loginUser = async (req:Request,res:Response) => {
     // res.cookie('JwtToken',token)    // store jwt token inside cookies
     await client.set('token', token);
     await client.disconnect()
-    successResponse(res,`${isUser?.fullname} loged in..` , 200)
+    successResponse(res,`${isUser?.fullname} ${i18n.__('login')}..` , 200)
   } catch (error:any) {
     console.log(error.message);
     errorResponse(res,error,400)
@@ -163,7 +165,7 @@ const patiants = async (req:Request,res:Response) => {
         diagnosis
       })
 
-    successResponse(res,'patient record inserted..',200)
+    successResponse(res,i18n.__('add-patient'),200)
   } catch (error:any) {
     errorResponse(res,error,401)
   }
@@ -192,7 +194,7 @@ const updatePatientsDetails = async (req:Request,res:Response) => {
         email:user.email
       })
   
-    successResponse(res,'patient data updated...',200)
+    successResponse(res,i18n.__('update-patient'),200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -202,7 +204,7 @@ const deletePatientsDetails = async (req:Request,res:Response) => {
     try {
       await Patient.findByIdAndDelete(req.params.id)
       
-      successResponse(res,'patient deleted..',200)
+      successResponse(res,i18n.__('delete-patient'),200)
     } catch (error) {
       errorResponse(res,error,400)
     }
@@ -214,7 +216,7 @@ const viewPatient = async (req:Request,res:Response) => {
     .select(['nickname','DOB','contact_no','address','allergies','medical_history','current_condition','email'])
     
     const response = {
-      msg:'user found..',
+      msg:i18n.__('found'),
       patient
     }
     successResponse(res,response,200);
@@ -260,7 +262,7 @@ const viewAllPateints = async (req:Request,res:Response) => {
    }
  
    const response = {
-     msg:'found all patients..',
+     msg:i18n.__('all-patients'),
      patien
    } 
    successResponse(res,response,200)
@@ -279,7 +281,7 @@ const allDoctors = async (req:Request,res:Response) => {
       createdAt:0,
       __v:0,
     });
-    const message = doctors.length > 0 ? 'All doctors found..' : 'currently any doctor not available';
+    const message = doctors.length > 0 ? i18n.__('all-doctors') : i18n.__('doctor-not-available');
     const response = {
       message,
       doctors
@@ -296,7 +298,7 @@ const doctorDetails = async (req:Request,res:Response) => {
     const degree:string = req.body.degree;
     
     const isEmail = await Doctor.findOne({email:req.body.user.email})
-      if(isEmail) throw 'this email already in use..';
+      if(isEmail) throw i18n.__('already-email-used');
       
         await Doctor.create({
           name:req.body.user.fullname,
@@ -305,7 +307,7 @@ const doctorDetails = async (req:Request,res:Response) => {
           degree
         })
 
-      successResponse(res,'doctor created..',201)
+      successResponse(res,i18n.__('doctor-created'),201)
   } catch (error) {
     errorResponse(res,error,401)
   }
@@ -321,7 +323,7 @@ const reqAppointmentByUser = async (req:Request,res:Response) => {
      doctorId,
      appointmentDate
    })
-   successResponse(res,'request sended..',200)
+   successResponse(res,i18n.__('appointment-req'),200)
  } catch (error) {
     errorResponse(res,error,400)
  }
@@ -337,7 +339,7 @@ const reqAppointmentByPatient = async (req:Request,res:Response) => {
       doctorId,
       appointmentDate
     })
-    successResponse(res,'request sended..',200)
+    successResponse(res,i18n.__('appointment-req'),200)
   } catch (error) {
      errorResponse(res,error,400)
   }
@@ -359,7 +361,7 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
       status
     })
 
-    const patient = await Patient.findById(appointmentData?.patientId)
+    const user = appointmentData?.patientId ? await Patient.findById(appointmentData?.patientId) : await User.findById(appointmentData?.userId)
 
     if(status == 'approve'){
       const transporter = nodemailer.createTransport({
@@ -373,17 +375,17 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
       try {
         await transporter.sendMail({
           from: data.ADMIN_EMAIL, // sender address
-          to: patient?.email, // list of receivers
+          to: user?.email, // list of receivers
           subject: "Appointment approved ✔", // Subject line
           text: `Dr.${req.body.doctor.name} accept your appointment..`, // plain text body
         });
       } catch (error) {
         console.log(error);
-        throw 'mail not send because of invalid credentials..'
+        throw i18n.__('mail-error')
       }
     }
 
-    successResponse(res,'view and moodify appointment by doctor..',200)
+    successResponse(res,i18n.__('appointment-edit-by-doctor'),200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -404,23 +406,23 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
 
     const appointments = await ReqAppointment.aggregate([
       { $match : { doctorId: req.body.doctor?._id} },
-      { $lookup : {
-        from: "patients",
-        localField: "patientId",
-        foreignField: "_id",
-        as: "patient"
-        } 
-      },
-      { $project : {
-         "appointmentDate" : 1, 
-         "timeDuration" : 1 , 
-         "status" : 1 , 
-         "patient" :1 ,
-         "createdAt" : 1 ,
-         "notesForRejection":1
-        } 
-      },
-      { $unwind : "$patient"},
+      // { $lookup : {
+      //   from: "patients",
+      //   localField: "patientId",
+      //   foreignField: "_id",
+      //   as: "patient"
+      //   } 
+      // },
+      // { $project : {
+      //    "appointmentDate" : 1, 
+      //    "timeDuration" : 1 , 
+      //    "status" : 1 , 
+      //    "patient" :1 ,
+      //    "createdAt" : 1 ,
+      //    "notesForRejection":1
+      //   } 
+      // },
+      // { $unwind : "$patient"},
       { $sort : { createdAt : -1 } },
       searchData
     ]).project({
@@ -433,7 +435,7 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
     })
   
     const response = {
-      msg:'all doctor appointment found..',
+      msg:i18n.__('appointment-by-doctorId'),
       appointments
     }
 
@@ -452,7 +454,7 @@ const updateAppointmentByDoctor = async (req:Request,res:Response) => {
       timeDuration
     })
 
-    successResponse(res,'updated done..',200)
+    successResponse(res,i18n.__('update-appointment'),200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -465,7 +467,7 @@ const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
     
     const appointmentData = await ReqAppointment.findById(id)
 
-    const appointment = await ReqAppointment.findByIdAndUpdate(id,{
+    await ReqAppointment.findByIdAndUpdate(id,{
       timeDuration:null,
       status:'reject',
       notesForRejection:notes
@@ -491,12 +493,12 @@ const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
         });
       } catch (error) {
         console.log(error);
-        throw 'mail not send because of invalid credentials..'
+        throw i18n.__('mail-error')
       }
     }
 
 
-    successResponse(res,'updated done..',200)
+    successResponse(res,i18n.__('update-appointment'),200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -523,7 +525,7 @@ const prescriptionByDoctor = async (req:Request,res:Response) => {
      diagnosis:patient?.diagnosis
    })
 
-   successResponse(res,'priscription created..',200)
+   successResponse(res,i18n.__('priscription-created'),200)
  } catch (error:any) {
   console.log(error.message);
     errorResponse(res,error,400)
@@ -561,6 +563,28 @@ const medicalHistory = async (req:Request,res:Response) => {
   } 
 }
 
+const feedbackBypatient = async (req:Request,res:Response) => {
+  try {
+    const feedback:string = req.body.feedback;
+    const patientId = req.body.patient._id;
+
+    const isPatient = await Feedback.findOne({patientId})
+
+    if(isPatient){
+      throw i18n.__('isPateint')
+    }
+
+      await Feedback.create({
+      patientId:req.body.patient._id,
+      feedback
+    })
+  
+    successResponse(res,i18n.__('create-feedback'),201)
+  } catch (error) {
+    errorResponse(res,error,400)
+  }
+}
+
 export {
   viewAllRoles,
   registerUser,
@@ -580,5 +604,6 @@ export {
   prescriptionByDoctor,
   viewAllPateints,
   medicalHistory,
-  reqAppointmentByPatient
+  reqAppointmentByPatient,
+  feedbackBypatient
 }

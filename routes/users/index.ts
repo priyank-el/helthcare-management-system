@@ -1,6 +1,6 @@
 import express from "express";
 
-import {viewAllRoles,medicalHistory,registerUser,verifyotp,loginUser,reqAppointmentByPatient,patiants,updatePatientsDetails,deletePatientsDetails,viewPatient,allDoctors,doctorDetails,viewAllPateints,reqAppointmentByUser,appointmentByDoctor,viewAppointmentByDoctor,updateAppointmentByDoctor,deleteAppointmentByDoctor,prescriptionByDoctor} from '../../controllers/userController'
+import {viewAllRoles,medicalHistory,registerUser,verifyotp,loginUser,reqAppointmentByPatient,patiants,updatePatientsDetails,deletePatientsDetails,viewPatient,allDoctors,doctorDetails,viewAllPateints,reqAppointmentByUser,appointmentByDoctor,viewAppointmentByDoctor,updateAppointmentByDoctor,deleteAppointmentByDoctor,prescriptionByDoctor,feedbackBypatient} from '../../controllers/userController'
 
 import {registerUserValidator,loginUserValidator,registerPatientValidator,updatePatientValidator,registerDoctorValidator} from '../../validators/userValidator'
 
@@ -15,7 +15,7 @@ router.post('/verify',verifyotp);
 router.post('/login',loginUserValidator,loginUser)
 router.post('/apply-appointment',jwtAuth,reqAppointmentByUser)
 
-// ? <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PATIENTS APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//**  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PATIENTS APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  */
 
 router.post('/patient',jwtAuth,registerPatientValidator,patiants)
 router.put('/update-patient',jwtAuth,patientAuth,updatePatientValidator,updatePatientsDetails)
@@ -25,7 +25,7 @@ router.post('/apply-appoint',jwtAuth,patientAuth,reqAppointmentByPatient)
 
 router.get('/view-all-doctors',jwtAuth,allDoctors)
 
-// ? <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< DOCTORS APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// ** <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< DOCTORS APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  */
 
 router.get('/all-patients',jwtAuth,viewAllPateints)
 router.post('/doctor',jwtAuth,registerDoctorValidator,doctorDetails)
@@ -37,5 +37,7 @@ router.put('/delete-appointment',jwtAuth,doctorAuth,deleteAppointmentByDoctor)
 router.post('/priscription',jwtAuth,doctorAuth,prescriptionByDoctor)
 
 router.post('/medical-history',jwtAuth,medicalHistory)
+
+router.post('/feedback',jwtAuth,patientAuth,feedbackBypatient)
 
 export default router;
