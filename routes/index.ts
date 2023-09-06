@@ -23,17 +23,17 @@ import jwtAuth from "../middleware/jwtAuth";
 import adminAuth from "../middleware/auth/adminAuth";
 import doctorAuth from "../middleware/auth/doctorAuth";
 
-const router = express.Router()
+const router = express.Router();
 
 router.post('/register',registerUserValidator,registerUser);
 router.post('/verify',verifyotp);
-router.post('/login',loginUserValidator,loginUser)
+router.post('/login',loginUserValidator,loginUser);
 
-router.get('/set-locale-language',jwtAuth,setLanguage)
-router.get('/view-all-doctors',jwtAuth,allDoctors)
-router.post('/apply-appointment',jwtAuth,reqAppointmentByUser)
-router.post('/medical-history',jwtAuth,medicalHistory)
-router.post('/emergency',jwtAuth,emergencyValidator,emergency)
+router.get('/set-locale-language',jwtAuth,setLanguage);
+router.get('/view-all-doctors',jwtAuth,allDoctors);
+router.post('/apply-appointment',jwtAuth,reqAppointmentByUser);
+router.post('/medical-history',jwtAuth,medicalHistory);
+router.post('/emergency',jwtAuth,emergencyValidator,emergency);
 
 // ? <<<<<<<<<<<<<<<<<<<<<<<<<< ALL ROUTES >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 router.use('/patient',jwtAuth,patientAuth,patientRoutes);
