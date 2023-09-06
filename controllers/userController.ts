@@ -294,6 +294,7 @@ const doctorDetails = async (req:Request,res:Response) => {
     const address:string = req.body.address;
     const degree:string = req.body.degree;
     const email= req.body.email;
+    const contact:string = req.body.contact;
     const image:any = req.file?.filename;
     
     const isEmail = await Doctor.findOne({email:req.body.email})
@@ -301,10 +302,11 @@ const doctorDetails = async (req:Request,res:Response) => {
       
         await Doctor.create({
           name:req.body.name,
-          email:email,
+          email,
           address,
           degree,
-          image
+          image,
+          contact
         })
 
       successResponse(res,i18n.__('doctor-created'),201)
@@ -403,7 +405,7 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
           $match: {
             $or: [
               { status: req.query.search },
-              { appointmentDate: req.query.search }
+              { appointmentDate: req.query.appointmentDate }
             ],
           },
         }

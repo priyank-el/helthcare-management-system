@@ -25,8 +25,11 @@ const registerPatientValidator = (req:Request,res:Response,next:any) => {
 
 const registerDoctorValidator = (req:Request,res:Response,next:any) => {
     const registerDoctor = {
+        name:'required|string',
         address:'required|string',
-        degree:'required|string'
+        degree:'required|string',
+        email:'required|string|isUniqueemail:Doctor,email',
+        contact:'required|string'
     }
     validation.validaeWithCallback(registerDoctor , req , res , next)
 }
