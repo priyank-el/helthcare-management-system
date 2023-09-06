@@ -1,17 +1,9 @@
 import mongoose from "mongoose";
+import Medicine from "./medicine";
 
 const priscriptionSchema = new mongoose.Schema({
-    medications:{
-        type: Array
-    },
-    dosages:{
-        type:Object
-    },
-    frequency:{
-        type:String
-    },
-    durations:{
-        type:String
+    totalMedicine:{
+        type:[ Medicine ]
     },
     doctorId:{
         type:mongoose.Types.ObjectId,

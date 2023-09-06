@@ -2,8 +2,7 @@ import { Response } from "express";
 
 const successResponse = (res:Response ,message:any , statusCode:number ) => {
     return res.status(statusCode).json({
-        success:true,
-        message
+        data:message
     })
 }
 
