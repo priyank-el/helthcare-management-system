@@ -20,5 +20,7 @@
     "priscription-created":"priscription created successfully..",
     "create-feedback":"feedback created successfully..",
     "isPateint":"Patient already in use..",
-    "created-emergency":"add your information as emergency.."
+    "created-emergency":"add your information as emergency..",
+    "authority-error":"you cant has authority to use this api..",
+    "not-valid-appointment":"Can not get appointment 🙁 please enter valid id.."
 }

@@ -15,6 +15,8 @@ dotenv.config()
 
 const app:Express = express();
 app.use(express.json())
+app.use(express.static('public'))
+app.use('/images', express.static(__dirname + '/images'));
 
 i18n.configure({
     locales:['en','hi'],

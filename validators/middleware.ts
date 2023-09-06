@@ -2,6 +2,7 @@
 import * as Validator from 'validatorjs';
 import { Request,Response } from 'express';
 import mongoose from 'mongoose';
+import i18n = require('i18n');
 
 Validator.registerAsync('isUniqueemail', async function (username , attribute , req , passes) {
   
@@ -14,6 +15,18 @@ Validator.registerAsync('isUniqueemail', async function (username , attribute , 
     return passes()
   }
   await passes(false , i18n.__('already-email-used'))
+}, '')
+
+Validator.registerAsync('isUnique', async function (username , attribute , req , passes) {
+  const array = attribute.split(',')
+  const {0:model,1:field} = array
+
+  const isUser = await mongoose.model(model).findOne( { [field]:username } )
+
+  if(!isUser){
+    return passes()
+  }
+  await passes(false ,'This medicine is already available in store.')
 }, '')
 
 // main function for do validation

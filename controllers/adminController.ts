@@ -1,6 +1,9 @@
 import { errorResponse, successResponse } from "../handler/responseHandler";
+import Medications from "../models/madications";
+import Priscription from "../models/priscription";
 import Role from "../models/roles";
 import { Response,Request } from "express";
+import i18n from "i18n";
 
 const makeRoles = async (req:Request , res:Response) => {
     try {
@@ -42,7 +45,32 @@ const viewAllRoles = async (req:Request,res:Response) => {
     }
   }
 
+const allPriscription = async (req:Request,res:Response) => {
+  try {
+    const allPriscription = await Priscription.find();
+    successResponse(res,allPriscription,200)
+  } catch (error) {
+      errorResponse(res,error,400) 
+  }
+}
+
+const addMedications = async (req:Request,res:Response) => {
+try {
+    const name:string = req.body.name;
+    const medicine = await Medications.create({
+      name
+    })
+
+    successResponse(res,medicine,200)
+} catch (error:any) {
+  console.log(error.message);
+    errorResponse(res,error,400)
+}
+}
+
 export  {
     makeRoles,
-    viewAllRoles
+    viewAllRoles,
+    allPriscription,
+    addMedications
 }

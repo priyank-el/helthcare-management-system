@@ -4,7 +4,7 @@ const patientsSchema = new mongoose.Schema({
     nickname:{
         type:String
     },
-    DOB:{
+    dob:{
         type:String
     },
     contact_no:{

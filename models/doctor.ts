@@ -13,8 +13,19 @@ const doctorSchema = new mongoose.Schema({
     },
     address:{
         type:String
+    },
+    contact:{
+        type:String
+    },
+    image:{
+        type:String,
+        get: function(value:string) {
+            // Transform and return value here
+            return `http://localhost:4001/images/${value}`;
+        }
     }
 },{
+    toJSON:{getters:true},
     timestamps:true
 });
 

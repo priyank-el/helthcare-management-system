@@ -35,7 +35,7 @@ router.post('/apply-appointment',jwtAuth,reqAppointmentByUser);
 router.post('/medical-history',jwtAuth,medicalHistory);
 router.post('/emergency',jwtAuth,emergencyValidator,emergency);
 
-// ? <<<<<<<<<<<<<<<<<<<<<<<<<< ALL ROUTES >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// ? <<<<<<<<<<<<<<<<<<<<<<<<<< ALL ROUTES >>>>>>>>>>>>>>>>>>>>>>>>>>>>> ? // 
 router.use('/patient',jwtAuth,patientAuth,patientRoutes);
 router.use('/doctor',jwtAuth,doctorAuth,doctorRoutes);
 router.use('/admin',jwtAuth,adminAuth,adminRoutes);

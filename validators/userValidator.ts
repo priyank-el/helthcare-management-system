@@ -14,7 +14,7 @@ const registerUserValidator = (req:Request,res:Response,next:any) => {
 
 const registerPatientValidator = (req:Request,res:Response,next:any) => {
     const registerPatient = {
-        DOB:'required|string',
+        dob:'required|string',
         address:'required|string',
         contact_no:'required|string',
         medical_history:'required|string',
@@ -49,7 +49,7 @@ const emergencyValidator = (req:Request,res:Response,next:any) => {
 
 const updatePatientValidator = (req:Request,res:Response,next:any) => {
     const updatePatient = {
-        DOB:'string',
+        dob:'string',
         address:'string',
         contact_no:'string',
         medical_history:'string',
@@ -116,6 +116,12 @@ const makeRoleValidator = (req:Request,res:Response,next:any) => {
     validation.validaeWithCallback(makeRole , req , res , next)
 }
 
+const addMedicationValidator = (req:Request,res:Response,next:any) => {
+    const addMedication = {
+        name:'required|string|isUnique:Medication,name'
+    }
+    validation.validaeWithCallback(addMedication , req , res , next)
+}
 
 export {
     registerUserValidator,
@@ -130,5 +136,6 @@ export {
     seduleAppointmentValidator,
     updateAppointmentValidator,
     requestAppointmentValidator,
-    makeRoleValidator
+    makeRoleValidator,
+    addMedicationValidator
 }

@@ -7,19 +7,15 @@ import nodemailer from 'nodemailer';
 import otpGenerator from 'otp-generator';
 import data from '../security/keys';
 import jwt from 'jsonwebtoken';
-// import {createClient} from 'redis';
 import Doctor from "../models/doctor";
 import ReqAppointment from "../models/requestAppointment";
 import mongoose from "mongoose";
 import Priscription from "../models/priscription";
-import Role from "../models/roles";
 import MedicalHistory from "../models/medicalHistory";
 import i18n from "i18n";
 import Feedback from "../models/feedBack";
 import Emergency from "../models/emergency";
-
-// const client = createClient()
-// client.on('error', err => console.log('Redis Client Error', err));
+import Notification from "../models/notification";
 
 const TokenGenerator = require("token-generator")({
   salt: "your secret ingredient for this magic recipe",
@@ -126,7 +122,7 @@ const loginUser = async (req:Request,res:Response) => {
 
     const token = jwt.sign({ email }  , data.SECRET_KEY );
     res.cookie('JwtToken',token)  
-    successResponse(res,`${token} ${i18n.__('login')}` , 200)
+    successResponse(res,token , 200)
   } catch (error:any) {
     console.log(error.message);
     errorResponse(res,error,400)
@@ -211,11 +207,7 @@ const viewPatient = async (req:Request,res:Response) => {
     const patient = await Patient.findOne({ email:req.body.user.email })
     .select(['nickname','DOB','contact_no','address','allergies','medical_history','current_condition','email'])
     
-    const response = {
-      msg:i18n.__('found'),
-      patient
-    }
-    successResponse(res,response,200);
+    successResponse(res,patient,200);
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -263,11 +255,7 @@ const viewAllPateints = async (req:Request,res:Response) => {
       }
    }
  
-   const response = {
-     msg:i18n.__('all-patients'),
-     patien
-   } 
-   successResponse(res,response,200)
+   successResponse(res,patien,200)
  } catch (error:any) {
     console.log(error.message);
     errorResponse(res,error,400)
@@ -305,15 +293,18 @@ const doctorDetails = async (req:Request,res:Response) => {
   try {
     const address:string = req.body.address;
     const degree:string = req.body.degree;
+    const email= req.body.email;
+    const image:any = req.file?.filename;
     
-    const isEmail = await Doctor.findOne({email:req.body.user.email})
+    const isEmail = await Doctor.findOne({email:req.body.email})
       if(isEmail) throw i18n.__('already-email-used');
       
         await Doctor.create({
-          name:req.body.user.fullname,
-          email:req.body.user.email,
+          name:req.body.name,
+          email:email,
           address,
-          degree
+          degree,
+          image
         })
 
       successResponse(res,i18n.__('doctor-created'),201)
@@ -371,8 +362,9 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
     })
 
     const user = appointmentData?.patientId ? await Patient.findById(appointmentData?.patientId) : await User.findById(appointmentData?.userId)
+    const appoint = await ReqAppointment.findById(_id)
 
-    if(status == 'approve'){
+    if(appoint?.status === 'approve'){
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -419,43 +411,15 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
 
     const appointments = await ReqAppointment.aggregate([
       { $match : { doctorId: req.body.doctor?._id} },
-      // { $lookup : {
-      //   from: "patients",
-      //   localField: "patientId",
-      //   foreignField: "_id",
-      //   as: "patient"
-      //   } 
-      // },
-      // { $project : {
-      //    "appointmentDate" : 1, 
-      //    "timeDuration" : 1 , 
-      //    "status" : 1 , 
-      //    "patient" :1 ,
-      //    "createdAt" : 1 ,
-      //    "notesForRejection":1
-      //   } 
-      // },
-      // { $unwind : "$patient"},
       { $sort : { createdAt : -1 } },
       searchData
     ]).project({
-      "patient._id" : 0,
-      "patient.createdAt" : 0,
-      "patient.updatedAt" : 0,
-      "patient.__v" : 0,
-      "patient.userId" : 0,
-      "patient.email" : 0,
+      '__v':0
     })
     .skip(record)
     .limit(3)
-  
-  
-    const response = {
-      msg:i18n.__('appointment-by-doctorId'),
-      appointments
-    }
 
-    successResponse(res,response,200)
+    successResponse(res,appointments,200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -465,10 +429,21 @@ const updateAppointmentByDoctor = async (req:Request,res:Response) => {
   try {
     const id = new mongoose.Types.ObjectId(req.body.id);
     const timeDuration = req.body.timeDuration;
+
+    const request = await ReqAppointment.findById(id);
+    if(!request) throw i18n.__('not-valid-appointment')
   
     await ReqAppointment.findByIdAndUpdate(id,{
       timeDuration
-    })
+    });
+    try {
+      await Notification.create({
+        patientId:request?.patientId,
+        notification:`Your appointment time change by doctor it is : ${timeDuration} `
+      })
+    } catch (error) {
+      throw error;
+    }
 
     successResponse(res,i18n.__('update-appointment'),200)
   } catch (error) {
@@ -489,8 +464,8 @@ const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
       notesForRejection:notes
     })
     const newAppointment = await ReqAppointment.findById(id)
-    const patient = await Patient.findById(appointmentData?.userId)
-
+    const user = appointmentData?.patientId ?  await Patient.findById(appointmentData?.patientId) : await User.findById(appointmentData?.userId)
+ 
     if(newAppointment?.status == 'reject'){
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -503,7 +478,7 @@ const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
       try {
         await transporter.sendMail({
           from: data.ADMIN_EMAIL, // sender address
-          to: patient?.email, // list of receivers
+          to: user?.email, // list of receivers
           subject: "Appointment rejected ✔", // Subject line
           text: `Dr.${req.body.doctor.name} temparary rejected your appointment.. ${notes}`, // plain text body
         });
@@ -523,22 +498,12 @@ const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
 const prescriptionByDoctor = async (req:Request,res:Response) => {
  try {
    const patientId = new mongoose.Types.ObjectId(req.body.patientId);
-
-   const patient = await Patient.findById(patientId)
-
-   const medications = req.body.medications;
-   const dosages = req.body.dosages;
-   const frequency = req.body.frequency;
-   const durations = req.body.durations;
+   const totalmedicine = req.body.totalmedicine;
  
    await Priscription.create({
-     medications,
-     dosages,
-     frequency,
-     durations,
+    totalMedicine:totalmedicine,
      doctorId:req.body.doctor?._id,
-     patientId,
-     diagnosis:patient?.diagnosis
+     patientId
    })
 
    successResponse(res,i18n.__('priscription-created'),200)
