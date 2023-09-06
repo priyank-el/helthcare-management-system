@@ -1,34 +1,43 @@
-import express,{Request,Response} from "express";
-import Role from "../models/roles";
-import {errorResponse, successResponse} from '../handler/responseHandler';
-import userRoutes from '../routes/users/index';
-import i18n from 'i18n';
+import express,{} from "express";
+import { 
+    emergencyValidator,
+    loginUserValidator,
+    registerUserValidator
+} from "../validators/userValidator";
+
+import { 
+    allDoctors,
+    emergency,
+    loginUser,
+    medicalHistory,
+    registerUser, 
+    reqAppointmentByUser, 
+    setLanguage, 
+    verifyotp
+} from "../controllers/userController";
+import patientAuth from "../middleware/auth/patientsAuth";
+import patientRoutes from '../routes/patients/index';
+import adminRoutes from '../routes/admin/index';
+import doctorRoutes from '../routes/doctors/index'
+import jwtAuth from "../middleware/jwtAuth";
+import adminAuth from "../middleware/auth/adminAuth";
+import doctorAuth from "../middleware/auth/doctorAuth";
 
 const router = express.Router()
 
-router.get('/set-locale',(req:Request,res:Response) => {
-    const lang:any = req.query.lang
-    const language = i18n.setLocale(lang);
-    
-    return res.status(200).json({
-        success:true,
-        language:`${language} language seted..`
-    })
-})
+router.post('/register',registerUserValidator,registerUser);
+router.post('/verify',verifyotp);
+router.post('/login',loginUserValidator,loginUser)
 
-router.post('/role' , async (req:Request , res:Response) => {
-    try {
-        const role = req.body.role;
-        await Role.create({ role });
-        
-        successResponse(res,`${role} ${i18n.__('created')} `,201)
+router.get('/set-locale',jwtAuth,setLanguage)
+router.get('/view-all-doctors',jwtAuth,allDoctors)
+router.post('/apply-appointment',jwtAuth,reqAppointmentByUser)
+router.post('/medical-history',jwtAuth,medicalHistory)
+router.post('/emergency',jwtAuth,emergencyValidator,emergency)
 
-    } catch (error:any) {
-        console.log(error.message);
-        errorResponse(res,error,401)
-    }
-})
+// ? <<<<<<<<<<<<<<<<<<<<<<<<<< ALL ROUTES >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+router.use('/patient',jwtAuth,patientAuth,patientRoutes);
+router.use('/doctor',jwtAuth,doctorAuth,doctorRoutes);
+router.use('/admin',jwtAuth,adminAuth,adminRoutes);
 
-router.use('/users' , userRoutes)
-
-export default router
+export default router;

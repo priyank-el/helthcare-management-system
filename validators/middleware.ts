@@ -13,7 +13,7 @@ Validator.registerAsync('isUniqueemail', async function (username , attribute , 
   if(!isUser){
     return passes()
   }
-  await passes(false , 'This email is already in use try with another email..')
+  await passes(false , i18n.__('already-email-used'))
 }, '')
 
 // main function for do validation

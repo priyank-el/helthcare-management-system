@@ -3,27 +3,22 @@ const jwt = require('jsonwebtoken');
 import { Request,Response } from "express";
 import { errorResponse } from "../handler/responseHandler";
 import User from "../models/user";
-import { createClient } from "redis";
-const client = createClient();
 import data from "../security/keys";
 
-module.exports = async (req:Request, res:Response, next:any) => {
+const jwtAuth = async (req:Request, res:Response, next:any) => {
     try {
-        await client.connect()
-        const token =await client.get('token')
-        await client.disconnect()
-        let decodedToken = await jwt.verify(token, data.SECRET_KEY)            //=> working with cookies
+        const authoazationToken = req.headers.authorization;
+        const token = authoazationToken?.split(" ")[1]
+        let decodedToken = await jwt.verify(token, data.SECRET_KEY)            
 
         if (!decodedToken) {
-            const error = new Error('Token not valid...')
-            throw error
+            throw 'Token not valid...'
         }
 
         const userRecord = await User.findOne({ email :  decodedToken.email})
 
         if (!userRecord) {
-            const error = new Error('User not found...')
-            throw error
+            throw 'User not found...'
         }
         
         req.body.user = userRecord
@@ -31,5 +26,5 @@ module.exports = async (req:Request, res:Response, next:any) => {
     } catch (error:any) {
         errorResponse(res,error.message,401)
     }
-
 }
+export default jwtAuth;

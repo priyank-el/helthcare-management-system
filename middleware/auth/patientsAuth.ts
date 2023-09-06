@@ -1,16 +1,20 @@
-import { Request,Response } from "express"
-import Patient from "../../models/patients";
+import { Request,Response } from "express";
 import { errorResponse } from "../../handler/responseHandler";
+import User from "../../models/user";
 
-module.exports = async (req:Request, res:Response, next:any) => {
+const patientAuth = async (req:Request, res:Response, next:any) => {
     try {
-        const isPatients = await Patient.findOne({email:req.body.user.email});
+        const isUser = await User.findOne({email:req.body.user.email});
 
-        if(!isPatients) throw 'patient not found please loged in..';
-        req.body.patient = isPatients
+        if(!isUser) throw 'user not found please input right creadential..';
+        if(!(isUser?.role === '64f17b729cc1af572a06a250')) throw 'you cant has authority to use this api..'
+
+        req.body.patient = isUser
         next();
     } catch (error:any) {
         console.log(error.message);
         errorResponse(res,error,401)
     }
 }
+
+export default patientAuth

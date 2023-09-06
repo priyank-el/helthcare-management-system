@@ -7,7 +7,7 @@ import nodemailer from 'nodemailer';
 import otpGenerator from 'otp-generator';
 import data from '../security/keys';
 import jwt from 'jsonwebtoken';
-import {createClient} from 'redis';
+// import {createClient} from 'redis';
 import Doctor from "../models/doctor";
 import ReqAppointment from "../models/requestAppointment";
 import mongoose from "mongoose";
@@ -18,8 +18,8 @@ import i18n from "i18n";
 import Feedback from "../models/feedBack";
 import Emergency from "../models/emergency";
 
-const client = createClient()
-client.on('error', err => console.log('Redis Client Error', err));
+// const client = createClient()
+// client.on('error', err => console.log('Redis Client Error', err));
 
 const TokenGenerator = require("token-generator")({
   salt: "your secret ingredient for this magic recipe",
@@ -27,16 +27,14 @@ const TokenGenerator = require("token-generator")({
 });
 const bcrypt = require('bcrypt');
 
-const viewAllRoles = async (req:Request,res:Response) => {
-  try {
-    const allRoles = await Role.find().select({
-      '__v' : 0
-    })
-
-    successResponse(res,allRoles,200)
-  } catch (error:any) {
-      errorResponse(res,error,400)
-  }
+const setLanguage = (req:Request,res:Response) => {
+  const lang:any = req.query.lang
+  const language = i18n.setLocale(lang);
+  
+  return res.status(200).json({
+      success:true,
+      language:`${language} language seted..`
+  })
 }
 
 const registerUser = async (req: Request, res: Response) => {
@@ -127,11 +125,8 @@ const loginUser = async (req:Request,res:Response) => {
     if(isUser?.otpVerification == false) throw 'otp verification required..'
 
     const token = jwt.sign({ email }  , data.SECRET_KEY );
-    await client.connect();
-    // res.cookie('JwtToken',token)    // store jwt token inside cookies
-    await client.set('token', token);
-    await client.disconnect()
-    successResponse(res,`${isUser?.fullname} ${i18n.__('login')}..` , 200)
+    res.cookie('JwtToken',token)  
+    successResponse(res,`${token} ${i18n.__('login')}` , 200)
   } catch (error:any) {
     console.log(error.message);
     errorResponse(res,error,400)
@@ -228,6 +223,10 @@ const viewPatient = async (req:Request,res:Response) => {
 
 const viewAllPateints = async (req:Request,res:Response) => {
  try {
+  const page:any = req.query.page ? req.query.page : 1;
+  const actualpage = parseInt(page) - 1;
+  const record = actualpage * 3;
+
     const searchData = req.query.search
     ? {
           $match: {
@@ -252,7 +251,9 @@ const viewAllPateints = async (req:Request,res:Response) => {
       '__v': 0
     } },
     searchData
-   ]);
+   ])
+   .skip(record)
+   .limit(2);
 
    for(let i=0;i<patien.length;i++){
       const isMedical = await MedicalHistory.findOne({patientId:patien[0]._id});
@@ -275,13 +276,20 @@ const viewAllPateints = async (req:Request,res:Response) => {
 
 const allDoctors = async (req:Request,res:Response) => {
    try {
+    const page:any = req.query.page ? req.query.page : 1;
+    const actualpage = parseInt(page) - 1;
+    const record = actualpage * 3;
+
     const doctors = await Doctor
     .find()
     .select({
       updatedAt:0,
       createdAt:0,
       __v:0,
-    });
+    })
+    .skip(record)
+    .limit(3);
+
     const message = doctors.length > 0 ? i18n.__('all-doctors') : i18n.__('doctor-not-available');
     const response = {
       message,
@@ -394,6 +402,10 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
 
 const viewAppointmentByDoctor = async (req:Request,res:Response) => { 
   try {
+    const page:any = req.query.page ? req.query.page : 1;
+    const actualpage = parseInt(page) - 1;
+    const record = actualpage * 3;
+
     const searchData =  req.query.search
       ? {
           $match: {
@@ -434,6 +446,9 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
       "patient.userId" : 0,
       "patient.email" : 0,
     })
+    .skip(record)
+    .limit(3)
+  
   
     const response = {
       msg:i18n.__('appointment-by-doctorId'),
@@ -612,7 +627,6 @@ const emergency = async (req:Request,res:Response) => {
 }
 
 export {
-  viewAllRoles,
   registerUser,
   verifyotp,
   loginUser,
@@ -632,5 +646,6 @@ export {
   medicalHistory,
   reqAppointmentByPatient,
   feedbackBypatient,
-  emergency
+  emergency,
+  setLanguage
 }

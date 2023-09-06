@@ -65,6 +65,57 @@ const loginUserValidator = (req:Request,res:Response,next:any) => {
     validation.validaeWithCallback(loginUser , req , res , next)
 }
 
+const priscriptionValidator = (req:Request,res:Response,next:any) => {
+    const priscription = {
+        patientId:'required|string',
+        medications:'required',
+        dosages:'required',
+        frequency:'required',
+        durations:'required'
+    }
+    validation.validaeWithCallback(priscription , req , res , next)
+}
+
+const deleteAppointmentValidator = (req:Request,res:Response,next:any) => {
+    const deleteAppointment = {
+        id:'required|string',
+        notes:'required|string'
+    }
+    validation.validaeWithCallback(deleteAppointment , req , res , next)
+}
+
+const seduleAppointmentValidator = (req:Request,res:Response,next:any) => {
+    const seduleAppointment = {
+        appointId:'required|string',
+        status:'required|string',
+        timeDuration:'required'
+    }
+    validation.validaeWithCallback(seduleAppointment , req , res , next)
+}
+
+const updateAppointmentValidator = (req:Request,res:Response,next:any) => {
+    const updateAppointment = {
+        id:'required|string',
+        timeDuration:'required'
+    }
+    validation.validaeWithCallback(updateAppointment , req , res , next)
+}
+
+const requestAppointmentValidator = (req:Request,res:Response,next:any) => {
+    const requestAppointment = {
+        id:'required|string',
+        appointmentDate:'required'
+    }
+    validation.validaeWithCallback(requestAppointment , req , res , next)
+}
+
+const makeRoleValidator = (req:Request,res:Response,next:any) => {
+    const makeRole = {
+        role:'required|string'
+    }
+    validation.validaeWithCallback(makeRole , req , res , next)
+}
+
 
 export {
     registerUserValidator,
@@ -73,5 +124,11 @@ export {
     registerDoctorValidator,
     updatePatientValidator,
     feedbackValidator,
-    emergencyValidator
+    emergencyValidator,
+    priscriptionValidator,
+    deleteAppointmentValidator,
+    seduleAppointmentValidator,
+    updateAppointmentValidator,
+    requestAppointmentValidator,
+    makeRoleValidator
 }

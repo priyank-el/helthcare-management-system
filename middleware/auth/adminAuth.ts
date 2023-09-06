@@ -2,12 +2,12 @@ import { Request,Response } from "express";
 import { errorResponse } from "../../handler/responseHandler";
 import User from "../../models/user";
 
-const doctorAuth = async (req:Request, res:Response, next:any) => {
+const adminAuth = async (req:Request, res:Response, next:any) => {
     try {
         const isUser = await User.findOne({email:req.body.user.email});
 
         if(!isUser) throw 'user not found please input right creadential..';
-        if(!(isUser?.role === '64f17ae8dc6c9c2bbcfeb113')) throw 'you cant has authority to use this api..'
+        if(!(isUser?.role === '64f55b3835dc425064e69925')) throw 'you cant has authority to use this api..'
 
         req.body.patient = isUser
         next();
@@ -17,4 +17,4 @@ const doctorAuth = async (req:Request, res:Response, next:any) => {
     }
 }
 
-export default doctorAuth;
+export default adminAuth

@@ -3,6 +3,7 @@ import './config/db'
 import chalk from 'chalk'
 import dotenv from "dotenv";
 import i18n from 'i18n';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 
 import data from './security/keys';
@@ -24,7 +25,7 @@ i18n.configure({
 });
 
 app.use(i18n.init)
-
+app.use(cookieParser())
 app.use(route)
 
 app.listen(data.PORT , () => {
