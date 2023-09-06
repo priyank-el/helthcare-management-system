@@ -29,7 +29,7 @@ router.post('/register',registerUserValidator,registerUser);
 router.post('/verify',verifyotp);
 router.post('/login',loginUserValidator,loginUser)
 
-router.get('/set-locale',jwtAuth,setLanguage)
+router.get('/set-locale-language',jwtAuth,setLanguage)
 router.get('/view-all-doctors',jwtAuth,allDoctors)
 router.post('/apply-appointment',jwtAuth,reqAppointmentByUser)
 router.post('/medical-history',jwtAuth,medicalHistory)
