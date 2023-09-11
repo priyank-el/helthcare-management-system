@@ -1,24 +1,22 @@
-import cron from 'node-cron'
-import { Request,Response } from "express"
-import ReqAppointment from '../models/requestAppointment'
-import Notification from '../models/notification'
+import Notification from "../models/notification";
+import ReqAppointment from "../models/requestAppointment";
+import cron from 'node-cron';
 
-const named = async (req:Request,res:Response) => {
+async function cronJobs (){
     const appointments = await ReqAppointment.find({status:'approve'})
 
     for(let i =0;i<appointments.length;i++){
-        const day = appointments[i]?.appointmentDate?.split(" ")[0]
-        const month = appointments[i]?.appointmentDate?.split(" ")[1]
-        const hours = 8;
+        const day = appointments[i]?.appointmentDate?.split("-")[0]
+        const month = appointments[i]?.appointmentDate?.split("-")[1]
+        const hours:any = appointments[i].timeDuration?.split("AM")[0];
+        const erlyHours = parseInt(hours) - 1
 
-        cron.schedule(`* ${hours} ${day} ${month} *` , () => {
+        cron.schedule(`* ${erlyHours} ${day} ${month} *` , () => {
             sendNotification(appointments[i]._id)
         })
     }
 }
-
 const sendNotification = async (id:any) => {
-
     const appointment = await ReqAppointment.findById(id)
 
     const notify = appointment?.patientId
@@ -32,6 +30,6 @@ const sendNotification = async (id:any) => {
     })
 }
 
-export {named} 
-
-
+export {
+    cronJobs
+}

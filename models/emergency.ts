@@ -1,21 +1,21 @@
 import mongoose from "mongoose";
 
 const emergencySchema = new mongoose.Schema({
-    userId:{
+    patientId:{
         type:mongoose.Types.ObjectId,
-        ref:'User'
+        ref:'Patient'
     },
-    reason:{
+    relative:{
         type:String
     },
-    age:{
+    contact_number:{
         type:String
     },
-    contactNO:{
+    address:{
         type:String
     }
 },
-{timestamps:true});
+);
 
 const Emergency = mongoose.model('Emergency',emergencySchema)
 export default Emergency;

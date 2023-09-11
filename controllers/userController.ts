@@ -6,13 +6,13 @@ import { Request, Response } from "express";
 import nodemailer from 'nodemailer';
 import otpGenerator from 'otp-generator';
 import data from '../security/keys';
+
 import jwt from 'jsonwebtoken';
 import Doctor from "../models/doctor";
 import ReqAppointment from "../models/requestAppointment";
 import mongoose from "mongoose";
 import Priscription from "../models/priscription";
 import MedicalHistory from "../models/medicalHistory";
-import i18n from "i18n";
 import Feedback from "../models/feedBack";
 import Emergency from "../models/emergency";
 import Notification from "../models/notification";
@@ -22,16 +22,6 @@ const TokenGenerator = require("token-generator")({
   timestampMap: "abcdefghij", // 10 chars array for obfuscation proposes
 });
 const bcrypt = require('bcrypt');
-
-const setLanguage = (req:Request,res:Response) => {
-  const lang:any = req.query.lang
-  const language = i18n.setLocale(lang);
-  
-  return res.status(200).json({
-      success:true,
-      language:`${language} language seted..`
-  })
-}
 
 const registerUser = async (req: Request, res: Response) => {
   try {
@@ -68,7 +58,7 @@ const registerUser = async (req: Request, res: Response) => {
       });
     } catch (error) {
       console.log(error);
-      throw 'mail not send because of invalid credentials..'
+      throw "mail not send because of invalid credentials.."
     }
     const user = await User.create({
       fullname,
@@ -80,11 +70,12 @@ const registerUser = async (req: Request, res: Response) => {
     });
 
     const response = {
-      msg: `${user.fullname} ${i18n.__('register')}`,
+      msg: `${user.fullname} registered successfully..`,
       token
     }
     successResponse(res,response,201)
-  } catch (error) {
+  } catch (error:any) {
+    console.log(error.message);
     errorResponse(res, error, 401)
   }
 }
@@ -102,7 +93,7 @@ try {
       otpVerification :true
     })
   
-    successResponse(res,i18n.__('verify-otp'),200)
+    successResponse(res,"otp verification done successfully",200)
 } catch (error) {
     errorResponse(res,error,400)
 }
@@ -142,7 +133,7 @@ const patiants = async (req:Request,res:Response) => {
     const diagnosis = req.body.diagnosis;
 
         const isPatient = await Patient.findOne({ email : req.body.user.email })
-        if(isPatient) throw `email already in use..`;
+        if(isPatient) throw req.body.language.EMAIL_ALREADY_EXIST
 
       await Patient.create({
         nickname:user.fullname,
@@ -157,7 +148,7 @@ const patiants = async (req:Request,res:Response) => {
         diagnosis
       })
 
-    successResponse(res,i18n.__('add-patient'),200)
+    successResponse(res,req.body.language.ADD_PATIENT,200)
   } catch (error:any) {
     errorResponse(res,error,401)
   }
@@ -167,7 +158,7 @@ const updatePatientsDetails = async (req:Request,res:Response) => {
   try {
     const user = req.body.user;
     
-    const DOB:string = req.body.DOB;
+    const dob:string = req.body.dob;
     const address:string = req.body.address;
     const contact_no:string = req.body.contact_no;
     const medical_history:string = req.body.medical_history;
@@ -176,7 +167,7 @@ const updatePatientsDetails = async (req:Request,res:Response) => {
   
       await Patient.findOneAndUpdate( {email :user.email} ,{
         nickname:user.fullname,
-        DOB,
+        dob,
         address,
         contact_no,
         medical_history,
@@ -186,7 +177,7 @@ const updatePatientsDetails = async (req:Request,res:Response) => {
         email:user.email
       })
   
-    successResponse(res,i18n.__('update-patient'),200)
+    successResponse(res,req.body.language.UPDATE_PATIENT,200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -196,7 +187,7 @@ const deletePatientsDetails = async (req:Request,res:Response) => {
     try {
       await Patient.findByIdAndDelete(req.params.id)
       
-      successResponse(res,i18n.__('delete-patient'),200)
+      successResponse(res,req.body.language.DELETE_PATIENT,200)
     } catch (error) {
       errorResponse(res,error,400)
     }
@@ -204,11 +195,19 @@ const deletePatientsDetails = async (req:Request,res:Response) => {
 
 const viewPatient = async (req:Request,res:Response) => {
   try {
+    const isHistory = await MedicalHistory.findOne({patientId:req.body.patient._id})
+    if(isHistory){
+    await Patient.findOneAndUpdate({ email:req.body.user.email },{ medical_history:isHistory })
+    .select(['nickname','diagnosis','contact_no','address','allergies','medical_history','current_condition','email','dob'])
     const patient = await Patient.findOne({ email:req.body.user.email })
-    .select(['nickname','DOB','contact_no','address','allergies','medical_history','current_condition','email'])
-    
     successResponse(res,patient,200);
-  } catch (error) {
+    }else{
+      const patient = await Patient.findOne({ email:req.body.user.email })
+      .select(['nickname','diagnosis','contact_no','address','allergies','medical_history','current_condition','email','dob'])  
+      successResponse(res,patient,200);
+    }
+  } catch (error:any) {
+    console.log(error.message);
     errorResponse(res,error,400)
   }
 }
@@ -218,23 +217,23 @@ const viewAllPateints = async (req:Request,res:Response) => {
   const page:any = req.query.page ? req.query.page : 1;
   const actualpage = parseInt(page) - 1;
   const record = actualpage * 3;
-
+  const data = `${req.query.search}*`
     const searchData = req.query.search
     ? {
           $match: {
             $or: [
-              { nickname: req.query.search },
-              { contact_no: req.query.search },
-              { address: req.query.search },
-              { diagnosis: req.query.search },
-              { allergies: req.query.search }
+              { nickname: { $regex: data, $options: 'i' } },
+              { contact_no: { $regex: data, $options: 'i' } },
+              { address: { $regex: data, $options: 'i' } },
+              { diagnosis:{ $regex: data, $options: 'i' } },
+              { allergies: { $regex: data, $options: 'i' } }
             ],
           },
         }
     : { $match: {} };
-
+        
    const patien = await Patient.aggregate([
-    { $match:{} },
+    searchData,
     { $project : {
       'userId': 0,
       'createdAt': 0,
@@ -242,16 +241,15 @@ const viewAllPateints = async (req:Request,res:Response) => {
       'updatedAt': 0,
       '__v': 0
     } },
-    searchData
    ])
    .skip(record)
-   .limit(2);
+   .limit(3);
 
    for(let i=0;i<patien.length;i++){
-      const isMedical = await MedicalHistory.findOne({patientId:patien[0]._id});
+      const isMedical = await MedicalHistory.findOne({patientId:patien[i]._id});
 
       if(isMedical){
-        patien[0].medical_history = isMedical
+        patien[i].medical_history = isMedical
       }
    }
  
@@ -268,23 +266,34 @@ const allDoctors = async (req:Request,res:Response) => {
     const actualpage = parseInt(page) - 1;
     const record = actualpage * 3;
 
-    const doctors = await Doctor
-    .find()
-    .select({
-      updatedAt:0,
-      createdAt:0,
-      __v:0,
-    })
+    const data = `${req.query.search}*`
+    const searchData = req.query.search
+    ? {
+          $match: {
+            $or: [
+              { name: { $regex: data, $options: 'i' } },
+              { degree: { $regex: data, $options: 'i' } },
+              { address: { $regex: data, $options: 'i' } }
+            ],
+          },
+        }
+    : { $match: {} };
+        
+
+    const doctors = await Doctor.aggregate([
+      searchData,
+      { $project : {
+        'createdAt':0,
+        'updatedAt':0,
+        '__v':0
+      } }
+    ])
     .skip(record)
     .limit(3);
 
-    const message = doctors.length > 0 ? i18n.__('all-doctors') : i18n.__('doctor-not-available');
-    const response = {
-      message,
-      doctors
-    }
-    successResponse(res,response,200)
-   } catch (error) {
+    successResponse(res,doctors,200)
+   } catch (error:any) {
+    console.log(error.message);
       errorResponse(res,error,400)
    }
 }
@@ -298,7 +307,7 @@ const doctorDetails = async (req:Request,res:Response) => {
     const image:any = req.file?.filename;
     
     const isEmail = await Doctor.findOne({email:req.body.email})
-      if(isEmail) throw i18n.__('already-email-used');
+      if(isEmail) throw req.body.language.EMAIL_ALREADY_EXIST
       
         await Doctor.create({
           name:req.body.name,
@@ -309,7 +318,7 @@ const doctorDetails = async (req:Request,res:Response) => {
           contact
         })
 
-      successResponse(res,i18n.__('doctor-created'),201)
+      successResponse(res,req.body.language.DOCTOR_CREATED,201)
   } catch (error) {
     errorResponse(res,error,401)
   }
@@ -325,7 +334,7 @@ const reqAppointmentByUser = async (req:Request,res:Response) => {
      doctorId,
      appointmentDate
    })
-   successResponse(res,i18n.__('appointment-req'),200)
+   successResponse(res,req.body.language.REQUEST_APPOINTMENT,200)
  } catch (error) {
     errorResponse(res,error,400)
  }
@@ -341,7 +350,7 @@ const reqAppointmentByPatient = async (req:Request,res:Response) => {
       doctorId,
       appointmentDate
     })
-    successResponse(res,i18n.__('appointment-req'),200)
+    successResponse(res,req.body.language.REQUEST_APPOINTMENT,200)
   } catch (error) {
      errorResponse(res,error,400)
   }
@@ -384,11 +393,11 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
         });
       } catch (error) {
         console.log(error);
-        throw i18n.__('mail-error')
+        throw req.body.language.SOMETHING_ERROR_IN_MAIL
       }
     }
 
-    successResponse(res,i18n.__('appointment-edit-by-doctor'),200)
+    successResponse(res,req.body.language.APPOINTMENT_EDIT_BY_DOCTOR,200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -404,8 +413,8 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
       ? {
           $match: {
             $or: [
-              { status: req.query.search },
-              { appointmentDate: req.query.appointmentDate }
+              { status: { $regex: req.query.search, $options: 'i' }},
+              { appointmentDate: { $regex: req.query.search, $options: 'i' }}
             ],
           },
         }
@@ -433,7 +442,7 @@ const updateAppointmentByDoctor = async (req:Request,res:Response) => {
     const timeDuration = req.body.timeDuration;
 
     const request = await ReqAppointment.findById(id);
-    if(!request) throw i18n.__('not-valid-appointment')
+    if(!request) throw req.body.language.APPOINTMENT_ERROR
   
     await ReqAppointment.findByIdAndUpdate(id,{
       timeDuration
@@ -447,7 +456,7 @@ const updateAppointmentByDoctor = async (req:Request,res:Response) => {
       throw error;
     }
 
-    successResponse(res,i18n.__('update-appointment'),200)
+    successResponse(res,req.body.language.APPOINTMENT_EDIT_BY_DOCTOR,200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -486,12 +495,12 @@ const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
         });
       } catch (error) {
         console.log(error);
-        throw i18n.__('mail-error')
+        throw req.body.language.SOMETHING_ERROR_IN_MAIL
       }
     }
 
 
-    successResponse(res,i18n.__('update-appointment'),200)
+    successResponse(res,req.body.language.UPDATE_APPOINTMENT,200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -508,7 +517,7 @@ const prescriptionByDoctor = async (req:Request,res:Response) => {
      patientId
    })
 
-   successResponse(res,i18n.__('priscription-created'),200)
+   successResponse(res,req.body.language.PRISCRIPTION_CREATED,200)
  } catch (error:any) {
   console.log(error.message);
     errorResponse(res,error,400)
@@ -521,6 +530,12 @@ const medicalHistory = async (req:Request,res:Response) => {
   
     const appointments = await ReqAppointment.aggregate([
       { $match : { patientId:patientId } },
+      { $match: {
+        $or: [
+          { status: 'approve'},
+          { status: 'reject'}
+        ],
+      }},
       { $project:{
           'patientId':0,
           'updatedAt':0,
@@ -534,11 +549,13 @@ const medicalHistory = async (req:Request,res:Response) => {
       'patientId':0,
       '__v':0
     })
+    if(!(appointments.length > 0 || priscription)) throw req.body.language.MEDICAL_HISTORY
     const medicalHistory = await MedicalHistory.create({
       appointments,
       priscription,
       patientId:patientId
     })
+
     successResponse(res,medicalHistory,200)
   } catch (error:any) {
     console.log(error.message);
@@ -554,7 +571,7 @@ const feedbackBypatient = async (req:Request,res:Response) => {
     const isPatient = await Feedback.findOne({patientId})
 
     if(isPatient){
-      throw i18n.__('isPateint')
+      throw req.body.language.PATIENT_ALREADY_EXIST
     }
 
       await Feedback.create({
@@ -562,7 +579,7 @@ const feedbackBypatient = async (req:Request,res:Response) => {
       feedback
     })
   
-    successResponse(res,i18n.__('create-feedback'),201)
+    successResponse(res,req.body.language.MAKE_FEEDBACK,201)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -570,27 +587,37 @@ const feedbackBypatient = async (req:Request,res:Response) => {
 
 const emergency = async (req:Request,res:Response) => {
  try {
-   const reason:string = req.body.reason;
-   const age:string  = req.body.age;
-   const contactNO = req.body.contact;
+   const relative:string = req.body.relative;
+   const contact_number:string  = req.body.contact_number;
+   const address = req.body.address;
 
   const isExist = await Emergency.findOne({
     userId:req.body.user._id
   })
 
-  if(isExist) throw i18n.__('isPateint')
+  if(isExist) throw req.body.language.PATIENT_ALREADY_EXIST
 
    await Emergency.create({
      userId:req.body.user._id,
-     reason,
-     age,
-     contactNO
+     address,
+     contact_number,
+     relative,
+     patientId:req.body.patient._id
    })
    
-   successResponse(res,i18n.__('created-emergency'),200)
+   successResponse(res,req.body.language.EMERGENCY_CREATED,200)
  } catch (error:any) {
     errorResponse(res,error,400)
  }
+}
+
+const allPriscription = async (req:Request,res:Response) => {
+  try {
+    const allPriscription = await Priscription.find();
+    successResponse(res,allPriscription,200)
+  } catch (error) {
+      errorResponse(res,error,400) 
+  }
 }
 
 export {
@@ -614,5 +641,5 @@ export {
   reqAppointmentByPatient,
   feedbackBypatient,
   emergency,
-  setLanguage
+  allPriscription
 }

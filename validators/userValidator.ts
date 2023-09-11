@@ -18,7 +18,7 @@ const registerPatientValidator = (req:Request,res:Response,next:any) => {
         address:'required|string',
         contact_no:'required|string',
         medical_history:'required|string',
-        current_condition:'required|string'
+        current_condition:'string'
     }
     validation.validaeWithCallback(registerPatient , req , res , next)
 }
@@ -43,9 +43,9 @@ const feedbackValidator = (req:Request,res:Response,next:any) => {
 
 const emergencyValidator = (req:Request,res:Response,next:any) => {
     const emergency = {
-        reason:'required|string',
-        age:'required|string',
-        contact:'required|string'
+        relative:'required|string',
+        contact_number:'required|string',
+        address:'required|string'
     }
     validation.validaeWithCallback(emergency , req , res , next)
 }

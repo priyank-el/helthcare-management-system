@@ -11,7 +11,7 @@ const patientAuth = async (req:Request, res:Response, next:any) => {
         const isPatient = await Patient.findOne({email:req.body.user.email});
 
         if(!isUser) throw 'user not found please input right creadential..';
-        if(!(isUser?.role === '64f81547ddf804cd0590fe59')) throw i18n.__('authority-error')
+        if(!(isUser?.role === '64f81547ddf804cd0590fe59')) throw req.body.language.AUTHORITY_ERROR
 
         req.body.patient = isPatient
         next();

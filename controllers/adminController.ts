@@ -54,6 +54,15 @@ const allPriscription = async (req:Request,res:Response) => {
   }
 }
 
+const allMedications = async (req:Request,res:Response) => {
+  try {
+    const allMedications = await Medications.find();
+    successResponse(res,allMedications,200)
+  } catch (error) {
+      errorResponse(res,error,400) 
+  }
+}
+
 const addMedications = async (req:Request,res:Response) => {
 try {
     const name:string = req.body.name;
@@ -72,5 +81,6 @@ export  {
     makeRoles,
     viewAllRoles,
     allPriscription,
-    addMedications
+    addMedications,
+    allMedications
 }

@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const patientsSchema = new mongoose.Schema({
     nickname:{
-        type:String
+        type:String,
+        index:true
     },
     dob:{
         type:String
@@ -17,7 +18,7 @@ const patientsSchema = new mongoose.Schema({
         type:Array
     },
     medical_history:{
-        type:String
+        type:Object
     },
     current_condition:{
         type:String
@@ -34,6 +35,8 @@ const patientsSchema = new mongoose.Schema({
     }
 },
 {timestamps:true})
+
+patientsSchema.index({nickname:"text",contact_no:"text"})
 
 const Patient = mongoose.model('Patient',patientsSchema)
 export default Patient

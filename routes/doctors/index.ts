@@ -6,16 +6,16 @@ import {
     prescriptionByDoctor, 
     updateAppointmentByDoctor, 
     viewAllPateints, 
-    viewAppointmentByDoctor 
+    viewAppointmentByDoctor
 } from "../../controllers/userController";
 import { 
-    deleteAppointmentValidator, 
-    priscriptionValidator,  
+    deleteAppointmentValidator,
     registerDoctorValidator, 
     seduleAppointmentValidator, 
     updateAppointmentValidator 
 } from "../../validators/userValidator";
 import multer from 'multer'
+import { allMedications } from "../../controllers/adminController";
 
 const router = express.Router()
 
@@ -40,5 +40,6 @@ router.put('/update-appointment',updateAppointmentValidator,updateAppointmentByD
 router.put('/delete-appointment',deleteAppointmentValidator,deleteAppointmentByDoctor)
 
 router.post('/priscription',prescriptionByDoctor)
+router.get('/medications',allMedications)
 
 export default router;
