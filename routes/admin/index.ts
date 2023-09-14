@@ -4,8 +4,8 @@ import { addMedicationValidator, makeRoleValidator } from "../../validators/user
 
 const router = express.Router()
 
-router.post('/role',makeRoles);
-router.get('/all-roles',makeRoleValidator,viewAllRoles)
+router.post('/role',makeRoleValidator,makeRoles);
+router.get('/all-roles',viewAllRoles)
 router.get('/get-priscription',allPriscription);
 router.get('/medications',allMedications);
 router.post('/add-medication',addMedicationValidator,addMedications)

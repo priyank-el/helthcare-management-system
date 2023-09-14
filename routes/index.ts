@@ -2,6 +2,7 @@ import express,{} from "express";
 import { 
     emergencyValidator,
     loginUserValidator,
+    makeRoleValidator,
     registerUserValidator
 } from "../validators/userValidator";
 
@@ -22,6 +23,7 @@ import jwtAuth from "../middleware/jwtAuth";
 import adminAuth from "../middleware/auth/adminAuth";
 import doctorAuth from "../middleware/auth/doctorAuth";
 import languageAuth from "../middleware/auth/languageAuth";
+import { viewAllRoles } from "../controllers/adminController";
 
 const router = express.Router();
 
@@ -32,6 +34,7 @@ router.post('/login',loginUserValidator,loginUser);
 router.get('/view-all-doctors',jwtAuth,languageAuth,allDoctors);
 router.post('/apply-appointment',jwtAuth,languageAuth,reqAppointmentByUser);
 router.post('/emergency',jwtAuth,emergencyValidator,languageAuth,emergency);
+router.get('/all-roles',viewAllRoles)
 
 // ? <<<<<<<<<<<<<<<<<<<<<<<<<< ALL ROUTES >>>>>>>>>>>>>>>>>>>>>>>>>>>>> ? // 
 router.use('/patient',jwtAuth,languageAuth,patientAuth,patientRoutes);

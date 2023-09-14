@@ -27,7 +27,7 @@ router.delete('/delete-patient/:id',deletePatientsDetails)
 router.get('/view-patient',viewPatient)
 router.post('/medical-history',medicalHistory);
 
-router.post('/apply-appoint',requestAppointmentValidator,reqAppointmentByPatient)
+router.post('/apply-appointment',requestAppointmentValidator,reqAppointmentByPatient)
 router.post('/feedback',feedbackValidator,feedbackBypatient)
 router.post('/emergency',emergencyValidator,emergency)
 
