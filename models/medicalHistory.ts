@@ -1,11 +1,8 @@
 import mongoose from "mongoose";
 
 const medicalHistorySchema = new mongoose.Schema({
-    appointments:{
+    history:{
         type:Array
-    },
-    priscription:{
-        type:Object
     },
     patientId:{
         type:mongoose.Types.ObjectId,

@@ -16,6 +16,7 @@ import MedicalHistory from "../models/medicalHistory";
 import Feedback from "../models/feedBack";
 import Emergency from "../models/emergency";
 import Notification from "../models/notification";
+import Role from "../models/roles";
 
 const TokenGenerator = require("token-generator")({
   salt: "your secret ingredient for this magic recipe",
@@ -105,15 +106,19 @@ const loginUser = async (req:Request,res:Response) => {
     const password:string = req.body.password;
   
     const isUser = await User.findOne({ email })
+    const role = await Role.findById(isUser?.role)
     const pass = await bcrypt.compare(password,isUser?.password);
   
     if(!pass) throw 'password miss matched..';
 
     if(isUser?.otpVerification == false) throw 'otp verification required..'
 
-    const token = jwt.sign({ email }  , data.SECRET_KEY );
+    const token = jwt.sign({ email,role:role?.role }  , data.SECRET_KEY );
     res.cookie('JwtToken',token)  
-    successResponse(res,token , 200)
+    const response = {
+      token
+    }
+    successResponse(res,response , 200)
   } catch (error:any) {
     console.log(error.message);
     errorResponse(res,error,400)
@@ -195,7 +200,8 @@ const deletePatientsDetails = async (req:Request,res:Response) => {
 
 const viewPatient = async (req:Request,res:Response) => {
   try {
-    const isHistory = await MedicalHistory.findOne({patientId:req.body.patient._id})
+    const patient = await Patient.findOne({email:req.body.user.email})
+    const isHistory = await MedicalHistory.findOne({patientId:patient?._id})
     if(isHistory){
     await Patient.findOneAndUpdate({ email:req.body.user.email },{ medical_history:isHistory })
     .select(['nickname','diagnosis','contact_no','address','allergies','medical_history','current_condition','email','dob'])
@@ -295,7 +301,7 @@ const allDoctors = async (req:Request,res:Response) => {
    } catch (error:any) {
     console.log(error.message);
       errorResponse(res,error,400)
-   }
+  }
 }
 
 const doctorDetails = async (req:Request,res:Response) => {
@@ -344,13 +350,24 @@ const reqAppointmentByPatient = async (req:Request,res:Response) => {
   try {
     const doctorId = new mongoose.Types.ObjectId(req.body.id)
     const appointmentDate = req.body.appointmentDate;
-  
+    const patient = await Patient.findOne({email:req.body.user.email})
+    const hasAlready = await ReqAppointment.findOne({
+      doctorId,
+      appointmentDate,
+      patientId:patient?._id
+    })
+    if(hasAlready){
+      throw "Your appointment already received.."
+    }
+    else{
     await ReqAppointment.create({
-      patientId:req.body.patient?._id,
+      patientId:patient?._id,
       doctorId,
       appointmentDate
     })
-    successResponse(res,req.body.language.REQUEST_APPOINTMENT,200)
+  }
+  const response = {meg:req.body.language.REQUEST_APPOINTMENT}
+    successResponse(res,response,200)
   } catch (error) {
      errorResponse(res,error,400)
   }
@@ -408,6 +425,9 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
     const page:any = req.query.page ? req.query.page : 1;
     const actualpage = parseInt(page) - 1;
     const record = actualpage * 3;
+    const doctor = await Doctor.findOne({
+      email:req.body.user.email
+    })
 
     const searchData =  req.query.search
       ? {
@@ -421,7 +441,7 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
       : { $match: {} };
 
     const appointments = await ReqAppointment.aggregate([
-      { $match : { doctorId: req.body.doctor?._id} },
+      { $match : { doctorId:doctor?._id} },
       { $sort : { createdAt : -1 } },
       searchData
     ]).project({
@@ -466,9 +486,13 @@ const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
   try {
     const notes:string = req.body.notes;
     const id = new mongoose.Types.ObjectId(req.body.id);
+    const doctor = await Doctor.findOne({email:req.body.user.email})
     
     const appointmentData = await ReqAppointment.findById(id)
-
+    if(appointmentData?.status == 'reject'){
+      throw "appointment status already rejected.."
+    }
+    else{
     await ReqAppointment.findByIdAndUpdate(id,{
       timeDuration:null,
       status:'reject',
@@ -491,16 +515,16 @@ const deleteAppointmentByDoctor = async (req:Request,res:Response) => {
           from: data.ADMIN_EMAIL, // sender address
           to: user?.email, // list of receivers
           subject: "Appointment rejected ✔", // Subject line
-          text: `Dr.${req.body.doctor.name} temparary rejected your appointment.. ${notes}`, // plain text body
+          text: `Dr.${doctor?.name} temparary rejected your appointment.. ${notes}`, // plain text body
         });
       } catch (error) {
         console.log(error);
         throw req.body.language.SOMETHING_ERROR_IN_MAIL
       }
     }
-
-
-    successResponse(res,req.body.language.UPDATE_APPOINTMENT,200)
+  }
+    const response = {message:req.body.language.UPDATE_APPOINTMENT}
+    successResponse(res,response,200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -526,10 +550,10 @@ const prescriptionByDoctor = async (req:Request,res:Response) => {
 
 const medicalHistory = async (req:Request,res:Response) => {
   try {
-    const patientId = new mongoose.Types.ObjectId(req.body.patientId);
-  
+    const patient = await Patient.findOne({email:req.body.user.email})
+    const id = new mongoose.Types.ObjectId(patient?.id)
     const appointments = await ReqAppointment.aggregate([
-      { $match : { patientId:patientId } },
+      { $match : { patientId:id } },
       { $match: {
         $or: [
           { status: 'approve'},
@@ -543,18 +567,9 @@ const medicalHistory = async (req:Request,res:Response) => {
       } }
     ])
 
-    const priscription = await Priscription.findOne({patientId})
-    .select({
-      '_id':0,
-      'patientId':0,
-      '__v':0
-    })
-    if(!(appointments.length > 0 || priscription)) throw req.body.language.MEDICAL_HISTORY
-    const medicalHistory = await MedicalHistory.create({
-      appointments,
-      priscription,
-      patientId:patientId
-    })
+    const priscription = await Priscription.aggregate([
+      {$match:{}}
+    ])
 
     successResponse(res,medicalHistory,200)
   } catch (error:any) {

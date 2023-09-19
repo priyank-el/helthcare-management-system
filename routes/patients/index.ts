@@ -10,7 +10,7 @@ import {
     deletePatientsDetails, 
     emergency, 
     feedbackBypatient, 
-    medicalHistory, 
+    // medicalHistory, 
     patiants, 
     reqAppointmentByPatient, 
     updatePatientsDetails, 
@@ -25,7 +25,7 @@ router.post('/patient',registerPatientValidator,patiants)
 router.put('/update-patient',updatePatientValidator,updatePatientsDetails)
 router.delete('/delete-patient/:id',deletePatientsDetails)
 router.get('/view-patient',viewPatient)
-router.post('/medical-history',medicalHistory);
+// router.post('/medical-history',medicalHistory);
 
 router.post('/apply-appointment',requestAppointmentValidator,reqAppointmentByPatient)
 router.post('/feedback',feedbackValidator,feedbackBypatient)

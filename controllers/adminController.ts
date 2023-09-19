@@ -1,3 +1,4 @@
+import { Aggregate } from "mongoose";
 import { errorResponse, successResponse } from "../handler/responseHandler";
 import Medications from "../models/madications";
 import Priscription from "../models/priscription";
@@ -27,18 +28,20 @@ const viewAllRoles = async (req:Request,res:Response) => {
       const searchData =  req.query.search
         ? {
             $match: {
-              role: req.query.search             
+              role: { $regex: req.query.search, $options: 'i' }          
             }
           }
         : { $match: {} };
   
       const allRoles = await Role.aggregate([
-          searchData,
-          {$project:{'__v':0}}
+          searchData
       ])
       .skip(record)
       .limit(2)
-  
+      .project({
+        "__v":0
+      })
+
       successResponse(res,allRoles,200)
     } catch (error:any) {
         errorResponse(res,error,400)
@@ -56,7 +59,28 @@ const allPriscription = async (req:Request,res:Response) => {
 
 const allMedications = async (req:Request,res:Response) => {
   try {
-    const allMedications = await Medications.find();
+    const page:any = req.query.page ? req.query.page : 1;
+    const actualpage = parseInt(page) - 1;
+    const record = actualpage * 2;
+    const searchData = req.query.search
+    ? {
+          $match: {
+            $or: [
+              { name: { $regex: req.query.search, $options: 'i' } }
+            ],
+          },
+        }
+    : { $match: {} };
+    const allMedications = await Medications
+    .aggregate([
+      searchData
+    ])
+    .project({
+      "__v":0
+    })
+    .skip(record)
+    .limit(2)
+
     successResponse(res,allMedications,200)
   } catch (error) {
       errorResponse(res,error,400) 

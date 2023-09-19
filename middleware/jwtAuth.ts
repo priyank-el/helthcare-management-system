@@ -5,7 +5,7 @@ import { errorResponse } from "../handler/responseHandler";
 import User from "../models/user";
 import data from "../security/keys";
 
-const jwtAuth = async (req:Request, res:Response, next:any) => {
+const jwtAuth = (role:any) => async (req:Request, res:Response, next:any) => {
     try {
         const authoazationToken = req.headers.authorization;
         const token = authoazationToken?.split(" ")[1]
@@ -20,7 +20,8 @@ const jwtAuth = async (req:Request, res:Response, next:any) => {
         if (!userRecord) {
             throw 'User not found...'
         }
-        
+        const hasPermission = role.includes(decodedToken.role)
+        if(!hasPermission) throw 'You can not access this url..'
         req.body.user = userRecord
         next()
     } catch (error:any) {

@@ -1,4 +1,4 @@
-import express,{} from "express";
+import express,{ Request, Response } from "express";
 import { 
     emergencyValidator,
     loginUserValidator,
@@ -14,13 +14,10 @@ import {
     verifyotp
 } from "../controllers/userController";
 
-import patientAuth from "../middleware/auth/patientsAuth";
 import patientRoutes from '../routes/patients/index';
 import adminRoutes from '../routes/admin/index';
 import doctorRoutes from '../routes/doctors/index'
 import jwtAuth from "../middleware/jwtAuth";
-import adminAuth from "../middleware/auth/adminAuth";
-import doctorAuth from "../middleware/auth/doctorAuth";
 import languageAuth from "../middleware/auth/languageAuth";
 import { viewAllRoles } from "../controllers/adminController";
 
@@ -30,14 +27,18 @@ router.post('/register',registerUserValidator,registerUser);
 router.post('/verify',verifyotp);
 router.post('/login',loginUserValidator,loginUser);
 
-router.get('/view-all-doctors',jwtAuth,languageAuth,allDoctors);
+router.get('/view-all-doctors',allDoctors);
 router.post('/apply-appointment',jwtAuth,languageAuth,reqAppointmentByUser);
 router.post('/emergency',jwtAuth,emergencyValidator,languageAuth,emergency);
 router.get('/all-roles',viewAllRoles)
 
+const use = (fn:any) => (req:Request, res:Response, next:any) => {
+    Promise.resolve(fn(req, res, next)).catch(next)
+  }
+
 // ? <<<<<<<<<<<<<<<<<<<<<<<<<< ALL ROUTES >>>>>>>>>>>>>>>>>>>>>>>>>>>>> ? // 
-router.use('/patient',jwtAuth,languageAuth,patientAuth,patientRoutes);
-router.use('/doctor',jwtAuth,languageAuth,doctorAuth,doctorRoutes);
-router.use('/admin',jwtAuth,languageAuth,adminAuth,adminRoutes);
+router.use('/patient',use(jwtAuth(['Patient','Administrator'])),languageAuth,patientRoutes);
+router.use('/doctor',use(jwtAuth(['Doctor','Administrator'])),languageAuth,doctorRoutes);
+router.use('/admin',use(jwtAuth(['Administrator'])),languageAuth,adminRoutes);
 
 export default router;
