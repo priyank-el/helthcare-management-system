@@ -2,7 +2,7 @@ import { errorResponse, successResponse } from "../handler/responseHandler";
 import User from "../models/user";
 import Patient from "../models/patients";
 
-import { Request, Response } from "express";
+import { Request, Response, response } from "express";
 import nodemailer from 'nodemailer';
 import otpGenerator from 'otp-generator';
 import data from '../security/keys';
@@ -12,7 +12,7 @@ import Doctor from "../models/doctor";
 import ReqAppointment from "../models/requestAppointment";
 import mongoose from "mongoose";
 import Priscription from "../models/priscription";
-import MedicalHistory from "../models/medicalHistory";
+import MedicalHistory from '../models/medicalHistory';
 import Feedback from "../models/feedBack";
 import Emergency from "../models/emergency";
 import Notification from "../models/notification";
@@ -323,8 +323,10 @@ const doctorDetails = async (req:Request,res:Response) => {
           image,
           contact
         })
-
-      successResponse(res,req.body.language.DOCTOR_CREATED,201)
+        const response = {
+          message:"doctor created.."
+        }
+      successResponse(res,response,201)
   } catch (error) {
     errorResponse(res,error,401)
   }
@@ -377,9 +379,11 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
   try {
     const status = req.body.status;
     const _id = new mongoose.Types.ObjectId(req.body.appointId)
+    const doctor = await Doctor.findOne({email:req.body.user.email})
 
     const appointmentData = await ReqAppointment.findById(_id)
-
+    if(appointmentData?.status == "approve") throw "status already changed.."
+    else{
     const timeDuration = req.body.timeDuration 
     ? await ReqAppointment.findOneAndUpdate({ _id },{
       status,
@@ -388,7 +392,7 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
     : await ReqAppointment.findOneAndUpdate({ _id },{
       status
     })
-
+  }
     const user = appointmentData?.patientId ? await Patient.findById(appointmentData?.patientId) : await User.findById(appointmentData?.userId)
     const appoint = await ReqAppointment.findById(_id)
 
@@ -406,15 +410,17 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
           from: data.ADMIN_EMAIL, // sender address
           to: user?.email, // list of receivers
           subject: "Appointment approved ✔", // Subject line
-          text: `Dr.${req.body.doctor.name} accept your appointment..`, // plain text body
+          text: `Dr.${doctor?.name} accept your appointment..`, // plain text body
         });
       } catch (error) {
         console.log(error);
         throw req.body.language.SOMETHING_ERROR_IN_MAIL
       }
     }
-
-    successResponse(res,req.body.language.APPOINTMENT_EDIT_BY_DOCTOR,200)
+    const response = {
+      message:req.body.language.APPOINTMENT_EDIT_BY_DOCTOR
+    }
+    successResponse(res,response,200)
   } catch (error) {
     errorResponse(res,error,400)
   }
@@ -534,11 +540,15 @@ const prescriptionByDoctor = async (req:Request,res:Response) => {
  try {
    const patientId = new mongoose.Types.ObjectId(req.body.patientId);
    const totalmedicine = req.body.totalmedicine;
+   const appointmentId = req.body.appointmentId;
+
+   const doctor = await Doctor.findOne({email:req.body.user.email})
  
    await Priscription.create({
     totalMedicine:totalmedicine,
-     doctorId:req.body.doctor?._id,
-     patientId
+      appointmentId,
+      doctorId:doctor?._id,
+      patientId
    })
 
    successResponse(res,req.body.language.PRISCRIPTION_CREATED,200)
@@ -548,35 +558,80 @@ const prescriptionByDoctor = async (req:Request,res:Response) => {
  }
 }
 
-const medicalHistory = async (req:Request,res:Response) => {
+const medicalHistory = async (req:Request, res:Response) => {
   try {
-    const patient = await Patient.findOne({email:req.body.user.email})
-    const id = new mongoose.Types.ObjectId(patient?.id)
+    const patient = await Patient.findOne({ email: req.body.user.email });
+    const id = new mongoose.Types.ObjectId(patient?.id);
     const appointments = await ReqAppointment.aggregate([
-      { $match : { patientId:id } },
-      { $match: {
-        $or: [
-          { status: 'approve'},
-          { status: 'reject'}
-        ],
-      }},
-      { $project:{
-          'patientId':0,
-          'updatedAt':0,
-          '__v':0
-      } }
-    ])
+      { $match: { patientId: id } },
+      {
+        $match: {
+          $or: [
+            { status: 'approve' },
+            { status: 'reject' },
+          ],
+        },
+      },
+      {
+        $project: {
+          'patientId': 0,
+          'updatedAt': 0,
+          '__v': 0,
+        },
+      },
+    ]);
 
-    const priscription = await Priscription.aggregate([
-      {$match:{}}
-    ])
+    const priscription = await Priscription.aggregate([{ $match: {} }]);
 
-    successResponse(res,medicalHistory,200)
+    // Create an array to hold the formatted history
+    const formattedHistory:any = [];
+
+    // Iterate through appointments and create formatted objects
+    appointments.forEach((appointment, index) => {
+      if(priscription.length == 0){
+        const formattedAppointment = {
+          [`appointment`]: {
+            ...appointment
+          },
+          'priscription': [],
+        };
+        formattedHistory.push(formattedAppointment);
+      }else{
+        priscription.forEach((priscriptionData) => {
+          const formattedAppointment = {
+            [`appointment`]: {
+              ...appointment,
+            },
+            ['priscription']: {...priscriptionData},
+          };
+        formattedHistory.push(formattedAppointment);
+        })
+      }
+    });
+    //Create medical History based on appointment and priscription
+    const isHistoryData = await MedicalHistory.findOne({patientId:patient?.id})
+    if(isHistoryData){
+      const medicalHistory = await MedicalHistory.findOneAndUpdate({patientId:patient?._id},
+        {
+          history:formattedHistory,
+          patientId:patient?._id
+        })
+    successResponse(res, medicalHistory, 200);
+
+    }
+    else{
+      const medicalHistory = await MedicalHistory.create({
+        history:formattedHistory,
+        patientId:patient?._id
+      })
+    successResponse(res, medicalHistory, 200);
+    }
+    
   } catch (error:any) {
-    console.log(error.message);
-      errorResponse(res,error,400)
-  } 
-}
+    console.error(error.message);
+    errorResponse(res, error, 400);
+  }
+};
 
 const feedbackBypatient = async (req:Request,res:Response) => {
   try {

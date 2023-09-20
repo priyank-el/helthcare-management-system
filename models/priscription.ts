@@ -13,9 +13,13 @@ const priscriptionSchema = new mongoose.Schema({
         type:mongoose.Types.ObjectId,
         ref:"Patient"
     },
-    diagnosis:{
-        type:String
-    }
+    appointmentId:{
+        type:mongoose.Types.ObjectId,
+        ref:"ReqAppointment"
+    },
+    // diagnosis:{
+    //     type:String
+    // }
 });
 
 const Priscription = mongoose.model('Priscription',priscriptionSchema);

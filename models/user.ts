@@ -22,6 +22,11 @@ const userSchema = new mongoose.Schema({
     },
     token:{
         type:String
+    },
+    activeStatus:{
+        type:Number,
+        default:1,
+        enum:[0,1]
     }
 },{
     timestamps:true

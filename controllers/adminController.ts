@@ -5,6 +5,7 @@ import Priscription from "../models/priscription";
 import Role from "../models/roles";
 import { Response,Request } from "express";
 import i18n from "i18n";
+import User from "../models/user";
 
 const makeRoles = async (req:Request , res:Response) => {
     try {
@@ -101,10 +102,48 @@ try {
 }
 }
 
+const blockPatient = async (req:Request,res:Response) => {
+  try {
+    const userId = req.body.id;
+  
+    const updateUser = await User.findByIdAndUpdate(userId,
+      {
+        activeStatus:0
+      })
+      const response = {
+        message:"user Upadated successfully.."
+      }
+      successResponse(res,response,200)
+  } catch (error:any) {
+    console.log(error.message);
+    errorResponse(res,error,400)
+  }
+}
+
+const allUsers = async (req:Request,res:Response) => {
+  try {
+    const allUsers = await User.find()
+    .select({
+      "_id":1,
+      "fullname":1,
+      "email":1,
+      "role":1,
+      "createdAt":1,
+      "activeStatus":1
+    })
+  
+    successResponse(res,allUsers,200)
+  } catch (error) {
+    errorResponse(res,error,400)
+  }
+}
+
 export  {
     makeRoles,
     viewAllRoles,
     allPriscription,
     addMedications,
-    allMedications
+    allMedications,
+    allUsers,
+    blockPatient
 }
