@@ -36,7 +36,8 @@ const registerDoctorValidator = (req:Request,res:Response,next:any) => {
 
 const feedbackValidator = (req:Request,res:Response,next:any) => {
     const feedback = {
-        feedback:'required|string'
+        feedback:'required|string',
+        doctorId:"required|string"
     }
     validation.validaeWithCallback(feedback , req , res , next)
 }

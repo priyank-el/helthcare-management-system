@@ -5,6 +5,10 @@ const feedbackSchema = new mongoose.Schema({
         type:mongoose.Types.ObjectId,
         ref:"Patient"
     },
+    doctorId:{
+        type:mongoose.Types.ObjectId,
+        ref:"Doctor"
+    },
     feedback:{
         type:String
     }

@@ -14,7 +14,8 @@ import {
     patiants, 
     reqAppointmentByPatient, 
     updatePatientsDetails, 
-    viewPatient 
+    viewPatient,
+    updateFeedback
 } from "../../controllers/userController";
 
 const router = express.Router();
@@ -28,7 +29,8 @@ router.get('/view-patient',viewPatient)
 router.post('/medical-history',medicalHistory);
 
 router.post('/apply-appointment',requestAppointmentValidator,reqAppointmentByPatient)
-router.post('/feedback',feedbackValidator,feedbackBypatient)
+router.post('/feedback',feedbackValidator,feedbackBypatient);
+router.put("/update-feedback",updateFeedback)
 router.post('/emergency',emergencyValidator,emergency)
 
 export default router;

@@ -636,22 +636,47 @@ const medicalHistory = async (req:Request, res:Response) => {
 const feedbackBypatient = async (req:Request,res:Response) => {
   try {
     const feedback:string = req.body.feedback;
-    const patientId = req.body.patient._id;
+    const patient = await Patient.findOne({email:req.body.user.email});
+    const doctorId = req.body.doctorId;
 
-    const isPatient = await Feedback.findOne({patientId})
+    const isPatient = await Feedback.findOne({patientId:patient?._id})
 
     if(isPatient){
       throw req.body.language.PATIENT_ALREADY_EXIST
     }
 
       await Feedback.create({
-      patientId:req.body.patient._id,
+      patientId:patient?._id,
+      doctorId,
       feedback
     })
   
     successResponse(res,req.body.language.MAKE_FEEDBACK,201)
   } catch (error) {
     errorResponse(res,error,400)
+  }
+}
+
+const updateFeedback = async (req:Request,res:Response) => {
+  try {
+    const feedback  = req.body.feedback;
+    const doctorId = req.body.doctorId;
+    const actualFeedback = feedback.toLowerCase().trim();
+    const patient = await Patient.findOne({email:req.body.user.email});
+  
+    await Feedback.findOneAndUpdate({
+      patientId:patient?._id
+    },{
+      feedback:actualFeedback,
+      doctorId
+    })
+    const response = {
+      message:"Feedback updated successfully.."
+    }
+    successResponse(res,response,200)
+  } catch (error:any) {
+    console.log(error.message);
+      errorResponse(res,error,400)
   }
 }
 
@@ -711,5 +736,6 @@ export {
   reqAppointmentByPatient,
   feedbackBypatient,
   emergency,
-  allPriscription
+  allPriscription,
+  updateFeedback
 }
