@@ -30,7 +30,7 @@ router.post('/login',loginUserValidator,loginUser);
 router.get('/view-all-doctors',allDoctors);
 router.post('/apply-appointment',jwtAuth,languageAuth,reqAppointmentByUser);
 router.post('/emergency',jwtAuth,emergencyValidator,languageAuth,emergency);
-router.get('/all-roles',viewAllRoles)
+router.get('/all-roles',viewAllRoles);
 
 const use = (fn:any) => (req:Request, res:Response, next:any) => {
     Promise.resolve(fn(req, res, next)).catch(next)

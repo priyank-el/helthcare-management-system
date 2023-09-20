@@ -20,6 +20,25 @@ const makeRoles = async (req:Request , res:Response) => {
     }
 }
 
+const updateRole = async (req:Request , res:Response) => {
+    try {
+        const oldRole = req.body.oldRole;
+        const newRole = req.body.newRole;
+        const isRole = await Role.findOneAndUpdate({ role:oldRole },{
+          role:newRole
+        });
+        if(!isRole) throw "this role not in list please add role first.."
+        const response = {
+          message:req.body.language.CREATED
+        }
+        successResponse(res,response,201)
+
+    } catch (error:any) {
+        console.log(error.message);
+        errorResponse(res,error,401)
+    }
+}
+
 const viewAllRoles = async (req:Request,res:Response) => {
     try {
       const page:any = req.query.page ? req.query.page : 1;
@@ -145,5 +164,6 @@ export  {
     addMedications,
     allMedications,
     allUsers,
-    blockPatient
+    blockPatient,
+    updateRole
 }

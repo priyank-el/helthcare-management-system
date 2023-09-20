@@ -598,13 +598,25 @@ const medicalHistory = async (req:Request, res:Response) => {
         formattedHistory.push(formattedAppointment);
       }else{
         priscription.forEach((priscriptionData) => {
-          const formattedAppointment = {
-            [`appointment`]: {
-              ...appointment,
-            },
-            ['priscription']: {...priscriptionData},
-          };
-        formattedHistory.push(formattedAppointment);
+          const appointmentid = new mongoose.Types.ObjectId(appointment._id)
+          const priscriptionid = new mongoose.Types.ObjectId(priscriptionData.appointmentId)
+          if(appointmentid.equals(priscriptionid)){
+            const formattedAppointment = {
+              [`appointment`]: {
+                ...appointment,
+              },
+              ['priscription']: {...priscriptionData},
+            };
+          formattedHistory.push(formattedAppointment);
+          }else{
+            const formattedAppointment = {
+              [`appointment`]: {
+                ...appointment,
+              },
+              'priscription': [],
+            };
+          formattedHistory.push(formattedAppointment);
+          }
         })
       }
     });
