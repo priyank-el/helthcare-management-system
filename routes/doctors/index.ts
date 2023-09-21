@@ -13,7 +13,8 @@ import {
     deleteAppointmentValidator,
     registerDoctorValidator, 
     seduleAppointmentValidator, 
-    updateAppointmentValidator 
+    updateAppointmentValidator,
+    makePriscriptionValidator 
 } from "../../validators/userValidator";
 import multer from 'multer'
 import { allMedications } from "../../controllers/adminController";
@@ -44,6 +45,6 @@ router.put('/appointment',seduleAppointmentValidator,appointmentByDoctor)
 router.put('/update-appointment',updateAppointmentValidator,updateAppointmentByDoctor)
 router.put('/delete-appointment',deleteAppointmentValidator,deleteAppointmentByDoctor)
 
-router.post('/priscription',prescriptionByDoctor)
+router.post('/priscription',makePriscriptionValidator,prescriptionByDoctor)
 
 export default router;
