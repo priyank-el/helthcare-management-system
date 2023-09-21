@@ -4,13 +4,16 @@ import { addMedicationValidator, makeRoleValidator,updateRoleValidator } from ".
 
 const router = express.Router()
 
-router.post('/role',makeRoleValidator,makeRoles);
-router.post("/update-role",updateRoleValidator,updateRole)
-router.get('/all-roles',viewAllRoles)
 router.get('/get-priscription',allPriscription);
 router.get('/medications',allMedications);
-router.post('/add-medication',addMedicationValidator,addMedications)
-router.get("/all-users",allUsers)
-router.post("/block-user",blockPatient)
+router.get("/all-users",allUsers);
+router.get('/all-roles',viewAllRoles);
+
+router.post('/role',makeRoleValidator,makeRoles);
+router.post("/update-role",updateRoleValidator,updateRole);
+
+router.post('/add-medication',addMedicationValidator,addMedications);
+
+router.post("/block-user",blockPatient);
 
 export default router;
