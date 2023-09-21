@@ -34,14 +34,16 @@ const storage = multer.diskStorage({
 // ** <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< DOCTORS APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  */
 
 router.get('/all-patients',viewAllPateints)
+router.get('/medications',allMedications)
+router.get('/appointment-data',viewAppointmentByDoctor)
+
 router.post('/doctor',upload.single('image'),registerDoctorValidator,doctorDetails)
 router.put('/update-profile',upload.single('image'),updateDoctorProfile)
-router.get('/appointment-data',viewAppointmentByDoctor)
+
 router.put('/appointment',seduleAppointmentValidator,appointmentByDoctor)
 router.put('/update-appointment',updateAppointmentValidator,updateAppointmentByDoctor)
 router.put('/delete-appointment',deleteAppointmentValidator,deleteAppointmentByDoctor)
 
 router.post('/priscription',prescriptionByDoctor)
-router.get('/medications',allMedications)
 
 export default router;
