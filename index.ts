@@ -1,11 +1,11 @@
-import express,{ Express,Request,Response } from "express";
-import './config/db'
-import chalk from 'chalk'
+import express,{ Express } from "express";
+import './config/db';
+import chalk from 'chalk';
 import dotenv from "dotenv";
 import cookieParser from 'cookie-parser';
 
 import data from './security/keys';
-import { cronJobs } from './controllers/cronJobs'
+import { cronJobs } from './controllers/cronJobs';
 import route from './routes/index';
 
 cronJobs()

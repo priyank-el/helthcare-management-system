@@ -23,7 +23,8 @@ const ENGLISH:any =  {
     EMERGENCY_CREATED:"add your information as emergency..",
     AUTHORITY_ERROR:"you cant has authority to use this api..",
     APPOINTMENT_ERROR:"Can not get appointment 🙁 please enter valid id..",
-    MEDICAL_HISTORY:"Patient don't have any past medicale history.."
+    MEDICAL_HISTORY:"Patient don't have any past medicale history..",
+    ROLE_UPDATED:"Role updated.."
 }
  
 export  {ENGLISH}

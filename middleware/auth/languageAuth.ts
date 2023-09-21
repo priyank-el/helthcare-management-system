@@ -15,7 +15,6 @@ const languageAuth = async (req:Request, res:Response, next:any) => {
         
         next();
     } catch (error:any) {
-        console.log(error.message);
         errorResponse(res,error,401)
     }
 }

@@ -129,7 +129,7 @@ const patiants = async (req:Request,res:Response) => {
   try {
     const user = req.body.user;
   
-    const DOB:string = req.body.DOB;
+    const dob:string = req.body.dob;
     const address:string = req.body.address;
     const contact_no:string = req.body.contact_no;
     const medical_history:string = req.body.medical_history;
@@ -142,7 +142,7 @@ const patiants = async (req:Request,res:Response) => {
 
       await Patient.create({
         nickname:user.fullname,
-        DOB,
+        dob,
         address,
         contact_no,
         medical_history,
@@ -449,9 +449,26 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
     const appointments = await ReqAppointment.aggregate([
       { $match : { doctorId:doctor?._id} },
       { $sort : { createdAt : -1 } },
+      {
+        $lookup: {
+          from: "patients",
+          localField: "patientId",
+          foreignField: "_id",
+          as: "patient_data",
+        },
+      },
+      {$unwind:'$patient_data'},
+      {$project:{
+        "patient_data.createdAt":0,
+        "patient_data.updatedAt":0,
+        "patient_data.__v":0,
+        "patient_data._id":0
+      }},
       searchData
     ]).project({
-      '__v':0
+      '__v':0,
+      'patientId':0,
+      'doctorId':0
     })
     .skip(record)
     .limit(3)
@@ -465,11 +482,12 @@ const viewAppointmentByDoctor = async (req:Request,res:Response) => {
 const updateAppointmentByDoctor = async (req:Request,res:Response) => {
   try {
     const id = new mongoose.Types.ObjectId(req.body.id);
-    const timeDuration = req.body.timeDuration;
-
+    const time = req.body.timeDuration;
+    const timeDuration = time.toLowerCase().trim();
     const request = await ReqAppointment.findById(id);
-    if(!request) throw req.body.language.APPOINTMENT_ERROR
-  
+    if(!request) throw req.body.language.APPOINTMENT_ERROR;
+    if(request.status == "reject") throw "This appointment rejected.."
+    if(request.timeDuration == timeDuration) throw "This time already seted..";
     await ReqAppointment.findByIdAndUpdate(id,{
       timeDuration
     });
@@ -483,7 +501,8 @@ const updateAppointmentByDoctor = async (req:Request,res:Response) => {
     }
 
     successResponse(res,req.body.language.APPOINTMENT_EDIT_BY_DOCTOR,200)
-  } catch (error) {
+  } catch (error:any) {
+    console.log(error.message);
     errorResponse(res,error,400)
   }
 }
@@ -727,6 +746,45 @@ const allPriscription = async (req:Request,res:Response) => {
   }
 }
 
+const priscription = async (req:Request,res:Response) => {
+    try {
+      const patient = await Patient.findOne({
+        email:req.body.user.email
+      })
+  
+      if(!patient) throw "patient not found.."
+      const priscription = await Priscription
+      .aggregate([
+        {$match:{patientId:patient._id}},
+        {
+          $lookup: {
+            from: "doctors",
+            localField: "doctorId",
+            foreignField: "_id",
+            as: "doctor_data",
+          }
+        },
+        {$unwind:"$doctor_data"},
+        {$project:{
+          "doctor_data._id":0,
+          "doctor_data.createdAt":0,
+          "doctor_data.updatedAt":0,
+          "doctor_data.__v":0
+        }}
+      ])
+      .project({
+        "_id":0,
+        "__v":0,
+        "patientId":0,
+        "doctorId":0
+      })
+  
+      successResponse(res,priscription,200)
+    } catch (error) {
+      errorResponse(res,error,400)
+    }
+}
+
 export {
   registerUser,
   verifyotp,
@@ -749,5 +807,6 @@ export {
   feedbackBypatient,
   emergency,
   allPriscription,
-  updateFeedback
+  updateFeedback,
+  priscription
 }

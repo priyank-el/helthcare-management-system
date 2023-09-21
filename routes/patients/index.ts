@@ -15,7 +15,8 @@ import {
     reqAppointmentByPatient, 
     updatePatientsDetails, 
     viewPatient,
-    updateFeedback
+    updateFeedback,
+    priscription
 } from "../../controllers/userController";
 
 const router = express.Router();
@@ -24,13 +25,15 @@ const router = express.Router();
 
 router.post('/patient',registerPatientValidator,patiants)
 router.put('/update-patient',updatePatientValidator,updatePatientsDetails)
-router.delete('/delete-patient/:id',deletePatientsDetails)
+// router.delete('/delete-patient/:id',deletePatientsDetails)
 router.get('/view-patient',viewPatient)
-router.post('/medical-history',medicalHistory);
+router.get('/medical-history',medicalHistory);
+router.get("/priscription",priscription)
 
 router.post('/apply-appointment',requestAppointmentValidator,reqAppointmentByPatient)
 router.post('/feedback',feedbackValidator,feedbackBypatient);
 router.put("/update-feedback",updateFeedback)
 router.post('/emergency',emergencyValidator,emergency)
+
 
 export default router;
