@@ -39,7 +39,7 @@ const validaeWithCallback = (rules:any,req:Request,res:Response,next:any) => {
 
 //** function for error handling */ 
 async function sendError(req:Request, res:Response, data:any, statusCode = 422) {
-  return res.status(statusCode).json({errors:data})
+  return res.status(statusCode).json(data)
 }
 
 function formattedErrors(err:any) {

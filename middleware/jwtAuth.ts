@@ -25,7 +25,8 @@ const jwtAuth = (role:any) => async (req:Request, res:Response, next:any) => {
         req.body.user = userRecord
         next()
     } catch (error:any) {
-        errorResponse(res,error.message,401)
+        console.log(error.message);
+        errorResponse(res,error,401)
     }
 }
 export default jwtAuth;

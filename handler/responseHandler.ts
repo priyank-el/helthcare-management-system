@@ -6,7 +6,6 @@ const successResponse = (res:Response ,message:any , statusCode:number ) => {
 
 const errorResponse = (res:Response ,message:any , statusCode:number) => {
     return res.status(statusCode).json({
-        success:false,
         error:message
     })
 }

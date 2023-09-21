@@ -12,7 +12,7 @@ const makeRoles = async (req:Request , res:Response) => {
         const role = req.body.role;
         await Role.create({ role });
         
-        successResponse(res,`${role} ${i18n.__('created')} `,201)
+        successResponse(res,req.body.language.CREATED,201)
 
     } catch (error:any) {
         console.log(error.message);
@@ -28,10 +28,7 @@ const updateRole = async (req:Request , res:Response) => {
           role:newRole
         });
         if(!isRole) throw "this role not in list please add role first.."
-        const response = {
-          message:req.body.language.CREATED
-        }
-        successResponse(res,response,201)
+        successResponse(res,req.body.language.ROLE_UPDATED,201)
 
     } catch (error:any) {
         console.log(error.message);
@@ -129,10 +126,7 @@ const blockPatient = async (req:Request,res:Response) => {
       {
         activeStatus:0
       })
-      const response = {
-        message:"user Upadated successfully.."
-      }
-      successResponse(res,response,200)
+      successResponse(res,"user Upadated successfully..",200)
   } catch (error:any) {
     console.log(error.message);
     errorResponse(res,error,400)
@@ -141,8 +135,27 @@ const blockPatient = async (req:Request,res:Response) => {
 
 const allUsers = async (req:Request,res:Response) => {
   try {
-    const allUsers = await User.find()
-    .select({
+    const page:any = req.query.page ? req.query.page : 1;
+    const actualpage = parseInt(page) - 1;
+    const record = actualpage * 2;
+
+    const data = `${req.query.search}*`
+    const searchData = req.query.search
+    ? {
+          $match: {
+            $or: [
+              { fullname: { $regex: data, $options: 'i' } },
+              { email: { $regex: data, $options: 'i' } },
+              { role: { $regex: data, $options: 'i' } }
+            ],
+          },
+        }
+    : { $match: {} };
+  
+    const allUsers = await User.aggregate([
+      searchData
+    ])
+    .project({
       "_id":1,
       "fullname":1,
       "email":1,
@@ -150,6 +163,8 @@ const allUsers = async (req:Request,res:Response) => {
       "createdAt":1,
       "activeStatus":1
     })
+    .skip(record)
+    .limit(2)
   
     successResponse(res,allUsers,200)
   } catch (error) {
