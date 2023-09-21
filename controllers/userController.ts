@@ -3,6 +3,7 @@ import User from "../models/user";
 import Patient from "../models/patients";
 
 import { Request, Response, response } from "express";
+import fs from "fs"
 import nodemailer from 'nodemailer';
 import otpGenerator from 'otp-generator';
 import data from '../security/keys';
@@ -785,6 +786,48 @@ const priscription = async (req:Request,res:Response) => {
     }
 }
 
+const updateDoctorProfile = async (req:Request,res:Response) => {
+    try {
+      const {
+        address,
+        degree,
+        email,
+        name,
+        contact
+      } = req.body;
+  
+      const image:any = req.file?.filename;
+      const doctor = await Doctor.findOne({email:req.app.locals.user.email})
+      if(!doctor) throw "doctor not found.."
+      if (doctor?.image) {
+        const image = doctor.image;
+        const c_image = image.split("images/")[1]
+        fs.unlink(`public/images/${c_image}`, (e) => {
+          if (e) {
+            console.log(e);
+          } else {
+            console.log("file deleted success..");
+          }
+        });
+      }
+  
+      await Doctor.findOneAndUpdate({email:doctor.email},
+        {
+          address,
+          degree,
+          name,
+          contact,
+          email,
+          image
+        })
+  
+        successResponse(res,"updated..",200)
+    } catch (error:any) {
+      console.log(error.message);
+      errorResponse(res,error,400)
+    }
+}
+
 export {
   registerUser,
   verifyotp,
@@ -808,5 +851,6 @@ export {
   emergency,
   allPriscription,
   updateFeedback,
-  priscription
+  priscription,
+  updateDoctorProfile
 }
