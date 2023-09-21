@@ -6,7 +6,8 @@ import {
     prescriptionByDoctor, 
     updateAppointmentByDoctor, 
     viewAllPateints, 
-    viewAppointmentByDoctor
+    viewAppointmentByDoctor,
+    updateDoctorProfile
 } from "../../controllers/userController";
 import { 
     deleteAppointmentValidator,
@@ -34,6 +35,7 @@ const storage = multer.diskStorage({
 
 router.get('/all-patients',viewAllPateints)
 router.post('/doctor',upload.single('image'),registerDoctorValidator,doctorDetails)
+router.put("/update-profile",upload.single('image'),updateDoctorProfile)
 router.get('/appointment-data',viewAppointmentByDoctor)
 router.put('/appointment',seduleAppointmentValidator,appointmentByDoctor)
 router.put('/update-appointment',updateAppointmentValidator,updateAppointmentByDoctor)

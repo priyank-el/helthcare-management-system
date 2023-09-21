@@ -23,6 +23,7 @@ const jwtAuth = (role:any) => async (req:Request, res:Response, next:any) => {
         const hasPermission = role.includes(decodedToken.role)
         if(!hasPermission) throw 'You can not access this url..'
         req.body.user = userRecord
+        req.app.locals.user = userRecord
         next()
     } catch (error:any) {
         console.log(error.message);

@@ -1,4 +1,5 @@
-import express,{ Express } from "express";
+import express,{ Express, urlencoded } from "express";
+import bodyParser from "body-parser" 
 import './config/db';
 import chalk from 'chalk';
 import dotenv from "dotenv";
@@ -7,13 +8,17 @@ import cookieParser from 'cookie-parser';
 import data from './security/keys';
 import { cronJobs } from './controllers/cronJobs';
 import route from './routes/index';
+// import { parse } from "express-form-data";
 
 cronJobs()
 
 dotenv.config()
 
 const app:Express = express();
+
+app.use(express.urlencoded({extended:false}))
 app.use(express.json())
+
 app.use(express.static('public'))
 app.use('/images', express.static(__dirname + '/images'));
 
