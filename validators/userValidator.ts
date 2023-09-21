@@ -25,6 +25,15 @@ const registerPatientValidator = (req:Request,res:Response,next:any) => {
     validation.validaeWithCallback(registerPatient , req , res , next)
 }
 
+const makePriscriptionValidator = (req:Request,res:Response,next:any) => {
+    const makePriscription = {
+        patientId:'required|string',
+        appointmentId:'required|string',
+        totalmedicine:'required|array'
+    }
+    validation.validaeWithCallback(makePriscription , req , res , next)
+}
+
 const registerDoctorValidator = (req:Request,res:Response,next:any) => {
     const registerDoctor = {
         name:'required|string',
@@ -152,5 +161,6 @@ export {
     requestAppointmentValidator,
     makeRoleValidator,
     addMedicationValidator,
-    updateRoleValidator
+    updateRoleValidator,
+    makePriscriptionValidator
 }

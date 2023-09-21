@@ -205,12 +205,15 @@ const viewPatient = async (req:Request,res:Response) => {
     const isHistory = await MedicalHistory.findOne({patientId:patient?._id})
     if(isHistory){
     await Patient.findOneAndUpdate({ email:req.body.user.email },{ medical_history:isHistory })
-    .select(['nickname','diagnosis','contact_no','address','allergies','medical_history','current_condition','email','dob'])
+    .select([ 'nickname','diagnosis','contact_no','address','allergies','medical_history','current_condition','email','dob'])
+
     const patient = await Patient.findOne({ email:req.body.user.email })
     successResponse(res,patient,200);
-    }else{
+    }
+    else{
       const patient = await Patient.findOne({ email:req.body.user.email })
-      .select(['nickname','diagnosis','contact_no','address','allergies','medical_history','current_condition','email','dob'])  
+      .select(['nickname','diagnosis','contact_no','address','allergies','medical_history','current_condition','email','dob'])
+        
       successResponse(res,patient,200);
     }
   } catch (error:any) {
