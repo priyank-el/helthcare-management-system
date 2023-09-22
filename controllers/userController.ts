@@ -204,6 +204,9 @@ const viewPatient = async (req:Request,res:Response) => {
   try {
     const patient = await Patient.findOne({email:req.body.user.email})
     const isHistory = await MedicalHistory.findOne({patientId:patient?._id})
+    const dateAndTime = patient?.createdAt;
+    const newFormate = moment(dateAndTime).format('D MMMM YYYY HH:mm');
+    console.log(newFormate);
     if(isHistory){
     await Patient.findOneAndUpdate({ email:req.body.user.email },{ medical_history:isHistory })
     .select([ 'nickname','diagnosis','contact_no','address','allergies','medical_history','current_condition','email','dob'])
