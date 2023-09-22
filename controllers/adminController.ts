@@ -4,7 +4,6 @@ import Medications from "../models/madications";
 import Priscription from "../models/priscription";
 import Role from "../models/roles";
 import { Response,Request } from "express";
-import i18n from "i18n";
 import User from "../models/user";
 
 const makeRoles = async (req:Request , res:Response) => {

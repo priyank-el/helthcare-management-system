@@ -22,6 +22,7 @@
     "express-form-data": "^2.0.22",
     "i18n": "^0.15.1",
     "jsonwebtoken": "^9.0.1",
+    "moment": "^2.29.4",
     "mongoose": "^7.4.5",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.2",
