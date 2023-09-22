@@ -1,14 +1,50 @@
-import { Aggregate } from "mongoose";
+import { Request, Response } from "express";
+import bcrypt from "bcrypt"
+import Admin from "../models/admin";
+import jwt from 'jsonwebtoken';
+import data from "../security/keys";
 import { errorResponse, successResponse } from "../handler/responseHandler";
-import Medications from "../models/madications";
-import Priscription from "../models/priscription";
 import Role from "../models/roles";
-import { Response,Request } from "express";
+import Medications from "../models/madications";
 import User from "../models/user";
+import Priscription from "../models/priscription";
 
+const addAdmin = async (req: Request, res: Response) => {
+    try {
+        const { name, email, password } = req.body;
+        const hasedPassword = await bcrypt.hash(password, 10)
+        const admin = await Admin.create({
+            name,
+            email,
+            password: hasedPassword
+        })
+        if (!admin) throw "Admin not created.."
+        successResponse(res, "Admin created..", 201)
+    } catch (error) {
+        errorResponse(res, error, 400)
+    }
+}
+
+const login = async (req: Request, res: Response) => {
+    try {
+        const { email, password } = req.body;
+        const isAdmin: any = await Admin.findOne({ email })
+        const isValidPassword = await bcrypt.compare(password, isAdmin?.password)
+        if (!isAdmin) throw "Admin not found..";
+        if (!isValidPassword) throw "Admin password missmatch..";
+        const token = jwt.sign({ email }, data.SECRET_KEY);
+        res.cookie('JwtToken', token)
+        successResponse(res, token, 201)
+    } catch (error) {
+        errorResponse(res, error, 400)
+    }
+}
+// ======================= MAIN APIs ========================
 const makeRoles = async (req:Request , res:Response) => {
     try {
         const role = req.body.role;
+        const isAlreadyExist = await Role.findOne({role})
+        if(isAlreadyExist) throw "Role already in list.."
         await Role.create({ role });
         
         successResponse(res,req.body.language.CREATED,201)
@@ -23,6 +59,7 @@ const updateRole = async (req:Request , res:Response) => {
     try {
         const oldRole = req.body.oldRole;
         const newRole = req.body.newRole;
+        if(oldRole === newRole) throw "Both roles are same.."
         const isRole = await Role.findOneAndUpdate({ role:oldRole },{
           role:newRole
         });
@@ -171,7 +208,10 @@ const allUsers = async (req:Request,res:Response) => {
   }
 }
 
-export  {
+    
+export {
+    addAdmin,
+    login,
     makeRoles,
     viewAllRoles,
     allPriscription,
