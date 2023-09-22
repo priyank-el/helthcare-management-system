@@ -16,7 +16,7 @@ import {
     updateAppointmentValidator,
     makePriscriptionValidator 
 } from "../../validators/userValidator";
-import multer from 'multer'
+import multer from 'multer';
 import { allMedications } from "../../controllers/adminController";
 
 const router = express.Router()

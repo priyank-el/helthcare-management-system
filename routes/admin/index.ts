@@ -1,8 +1,12 @@
 import express,{} from "express";
-import { addMedications, allMedications, allPriscription, makeRoles, viewAllRoles,allUsers,blockPatient,updateRole } from "../../controllers/adminController";
-import { addMedicationValidator, makeRoleValidator,updateRoleValidator } from "../../validators/userValidator";
+import { addAdmin, addMedications, allMedications, allUsers, blockPatient, login, makeRoles, updateRole, viewAllRoles } from "../../controllers/adminController";
+import { allPriscription } from "../../controllers/userController";
+import { addMedicationValidator, makeRoleValidator, updateRoleValidator } from "../../validators/userValidator";
 
 const router = express.Router()
+
+router.post('/register',addAdmin);
+router.post('/login',login);
 
 router.get('/get-priscription',allPriscription);
 router.get('/medications',allMedications);

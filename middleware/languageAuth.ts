@@ -1,7 +1,7 @@
 import { Request,Response } from "express";
-import { errorResponse } from "../../handler/responseHandler";
-import { ENGLISH } from "../../languages/en";
-import { HINDI } from "../../languages/hi";
+import { HINDI } from "../languages/hi";
+import { ENGLISH } from "../languages/en";
+import { errorResponse } from "../handler/responseHandler";
 
 const languageAuth = async (req:Request, res:Response, next:any) => {
     try {

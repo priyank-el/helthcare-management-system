@@ -16,11 +16,12 @@ import {
 } from "../controllers/userController";
 
 import patientRoutes from '../routes/patients/index';
-import adminRoutes from '../routes/admin/index';
-import doctorRoutes from '../routes/doctors/index'
+// import adminRoutes from './administrator/index';
+import doctorRoutes from '../routes/doctors/index';
+import adminRoute from '../routes/admin/index'
 import jwtAuth from "../middleware/jwtAuth";
-import languageAuth from "../middleware/auth/languageAuth";
-import { makeRoles, viewAllRoles } from "../controllers/adminController";
+import { viewAllRoles } from "../controllers/adminController";
+import languageAuth from "../middleware/languageAuth";
 
 const router = express.Router();
 
@@ -32,7 +33,6 @@ router.get('/view-all-doctors',allDoctors);
 router.post('/apply-appointment',jwtAuth,languageAuth,reqAppointmentByUser);
 router.post('/emergency',jwtAuth,emergencyValidator,languageAuth,emergency);
 router.get('/all-roles',viewAllRoles);
-router.post('/role',languageAuth,makeRoleValidator,makeRoles);
 
 const use = (fn:any) => (req:Request, res:Response, next:any) => {
     Promise.resolve(fn(req, res, next)).catch(next)
@@ -41,6 +41,7 @@ const use = (fn:any) => (req:Request, res:Response, next:any) => {
 // ? <<<<<<<<<<<<<<<<<<<<<<<<<< ALL ROUTES >>>>>>>>>>>>>>>>>>>>>>>>>>>>> ? // 
 router.use('/patient',use(jwtAuth(['Patient','Administrator'])),languageAuth,patientRoutes);
 router.use('/doctor',use(jwtAuth(['Doctor','Administrator'])),languageAuth,doctorRoutes);
-router.use('/admin',use(jwtAuth(['Administrator'])),languageAuth,adminRoutes);
+// router.use('/admin',use(jwtAuth(['Administrator'])),languageAuth,adminRoutes);
+router.use('/admin-auth',languageAuth,adminRoute)
 
 export default router;
