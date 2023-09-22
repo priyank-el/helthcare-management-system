@@ -2,6 +2,7 @@ import express,{ Request, Response } from "express";
 import { 
     emergencyValidator,
     loginUserValidator,
+    makeRoleValidator,
     registerUserValidator
 } from "../validators/userValidator";
 
@@ -19,7 +20,7 @@ import adminRoutes from '../routes/admin/index';
 import doctorRoutes from '../routes/doctors/index'
 import jwtAuth from "../middleware/jwtAuth";
 import languageAuth from "../middleware/auth/languageAuth";
-import { viewAllRoles } from "../controllers/adminController";
+import { makeRoles, viewAllRoles } from "../controllers/adminController";
 
 const router = express.Router();
 
@@ -31,6 +32,7 @@ router.get('/view-all-doctors',allDoctors);
 router.post('/apply-appointment',jwtAuth,languageAuth,reqAppointmentByUser);
 router.post('/emergency',jwtAuth,emergencyValidator,languageAuth,emergency);
 router.get('/all-roles',viewAllRoles);
+router.post('/role',languageAuth,makeRoleValidator,makeRoles);
 
 const use = (fn:any) => (req:Request, res:Response, next:any) => {
     Promise.resolve(fn(req, res, next)).catch(next)

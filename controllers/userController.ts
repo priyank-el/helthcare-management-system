@@ -18,6 +18,7 @@ import Feedback from "../models/feedBack";
 import Emergency from "../models/emergency";
 import Notification from "../models/notification";
 import Role from "../models/roles";
+import moment from "moment";
 
 const TokenGenerator = require("token-generator")({
   salt: "your secret ingredient for this magic recipe",
@@ -208,6 +209,8 @@ const viewPatient = async (req:Request,res:Response) => {
     .select([ 'nickname','diagnosis','contact_no','address','allergies','medical_history','current_condition','email','dob'])
 
     const patient = await Patient.findOne({ email:req.body.user.email })
+    .select([ 'nickname','diagnosis','contact_no','address','allergies','medical_history','current_condition','email','dob'])
+
     successResponse(res,patient,200);
     }
     else{
@@ -385,8 +388,14 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
     const _id = new mongoose.Types.ObjectId(req.body.appointId)
     const doctor = await Doctor.findOne({email:req.body.user.email})
 
-    const appointmentData = await ReqAppointment.findById(_id)
-    if(appointmentData?.status == "approve") throw "status already changed.."
+    const appointmentData = await ReqAppointment.findById(_id);
+    const appointments = await ReqAppointment.find();
+
+    appointments.map(appoint => {
+      if(appoint?.timeDuration == req.body.timeDuration) throw "this time is already register for another apoointment.."
+    })
+    if(appointmentData?.status == "approve") throw "status already changed..";
+    
     else{
     const timeDuration = req.body.timeDuration 
     ? await ReqAppointment.findOneAndUpdate({ _id },{
@@ -397,6 +406,7 @@ const appointmentByDoctor = async (req:Request,res:Response) => {
       status
     })
   }
+  
     const user = appointmentData?.patientId ? await Patient.findById(appointmentData?.patientId) : await User.findById(appointmentData?.userId)
     const appoint = await ReqAppointment.findById(_id)
 
