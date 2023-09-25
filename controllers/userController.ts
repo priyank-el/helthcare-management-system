@@ -347,7 +347,6 @@ const allDoctors = async (req: Request, res: Response) => {
       })
     }
     const allDoctor = await Doctor.aggregate([
-      { $match: {} },
       { $unwind: { 
         path: "$feedback",
         preserveNullAndEmptyArrays:true
@@ -373,6 +372,7 @@ const allDoctors = async (req: Request, res: Response) => {
           "email":{"$first":"$email"},
           "degree":{"$first":"$degree"},
           "image":{"$first":"$image"},
+          "address":{"$first":"$address"},
           "feedback": { "$push": "$feedback" }
         }
       },
@@ -392,7 +392,8 @@ const allDoctors = async (req: Request, res: Response) => {
           "feedback.patient.updatedAt":0,
           "feedback.patient.__v":0
         }
-      }
+      },
+      searchData
     ])
       .project({
         "createdAt": 0,
@@ -583,7 +584,6 @@ const viewAppointmentByDoctor = async (req: Request, res: Response) => {
           "patient_data.createdAt": 0,
           "patient_data.updatedAt": 0,
           "patient_data.__v": 0,
-          "patient_data._id": 0
         }
       },
       searchData
@@ -688,8 +688,7 @@ const deleteAppointmentByDoctor = async (req: Request, res: Response) => {
 const prescriptionByDoctor = async (req: Request, res: Response) => {
   try {
     const patientId = new mongoose.Types.ObjectId(req.body.patientId);
-    const totalmedicine = req.body.totalmedicine;
-    const appointmentId = req.body.appointmentId;
+    const {totalmedicine,appointmentId,notes} = req.body
 
     const doctor = await Doctor.findOne({ email: req.body.user.email })
 
@@ -697,7 +696,8 @@ const prescriptionByDoctor = async (req: Request, res: Response) => {
       totalMedicine: totalmedicine,
       appointmentId,
       doctorId: doctor?._id,
-      patientId
+      patientId,
+      notes
     })
 
     successResponse(res, req.body.language.PRISCRIPTION_CREATED, 200)
