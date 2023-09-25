@@ -6,8 +6,7 @@ import {
     requestAppointmentValidator, 
     updatePatientValidator
  } from "../../validators/userValidator";
-import {  
-    deletePatientsDetails, 
+import { 
     emergency, 
     feedbackBypatient, 
     medicalHistory, 
@@ -18,13 +17,25 @@ import {
     updateFeedback,
     priscription
 } from "../../controllers/userController";
+import multer from "multer";
 
 const router = express.Router();
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'public/images')
+    },
+    filename: function (req, file, cb) {
+      cb(null, new Date().getTime() + '_' + file.originalname);
+    }
+  })
+  
+  const upload = multer({ storage: storage })
 
 //**  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< PATIENTS APIs >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  */
 
 router.post('/patient',registerPatientValidator,patiants)
-router.put('/update-patient',updatePatientValidator,updatePatientsDetails)
+router.put('/update-patient',upload.single('image'),updatePatientsDetails)
 
 router.get('/view-patient',viewPatient)
 router.get('/medical-history',medicalHistory);
