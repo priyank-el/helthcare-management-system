@@ -17,9 +17,9 @@ const priscriptionSchema = new mongoose.Schema({
         type:mongoose.Types.ObjectId,
         ref:"ReqAppointment"
     },
-    // diagnosis:{
-    //     type:String
-    // }
+    notes:{
+        type:String
+    }
 });
 
 const Priscription = mongoose.model('Priscription',priscriptionSchema);
