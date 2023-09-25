@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { feedbackSchema } from "./feedBack";
 
 const doctorSchema = new mongoose.Schema({
     name:{
@@ -23,6 +24,10 @@ const doctorSchema = new mongoose.Schema({
             // Transform and return value here
             return `http://localhost:4001/images/${value}`;
         }
+    },
+    feedback:{
+        type:[feedbackSchema],
+        default:null
     }
 },{
     toJSON:{getters:true},

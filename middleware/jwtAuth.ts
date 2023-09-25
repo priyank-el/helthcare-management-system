@@ -5,7 +5,7 @@ import { errorResponse } from "../handler/responseHandler";
 import User from "../models/user";
 import data from "../security/keys";
 
-const jwtAuth = (role:any) => async (req:Request, res:Response, next:any) => {
+const jwtAuth = (type:any) => async (req:Request, res:Response, next:any) => {
     try {
         const authoazationToken = req.headers.authorization;
         const token = authoazationToken?.split(" ")[1]
@@ -20,7 +20,9 @@ const jwtAuth = (role:any) => async (req:Request, res:Response, next:any) => {
         if (!userRecord) {
             throw 'User not found...'
         }
-        const hasPermission = role.includes(decodedToken.role)
+        const tokenType = decodedToken.type;
+        const userType = tokenType.toString();
+        const hasPermission = type.includes(userType)
         if(!hasPermission) throw 'You can not access this url..'
         req.body.user = userRecord
         req.app.locals.user = userRecord

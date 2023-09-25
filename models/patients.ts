@@ -32,7 +32,14 @@ const patientsSchema = new mongoose.Schema({
     },
     diagnosis:{
         type:String
-    }
+    },
+    image:{
+        type:String,
+        get: function(value:string) {
+            // Transform and return value here
+            return `http://localhost:4001/images/${value}`;
+        }
+    },
 },
 {timestamps:true})
 

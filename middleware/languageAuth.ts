@@ -12,6 +12,7 @@ const languageAuth = async (req:Request, res:Response, next:any) => {
         : ENGLISH
 
         req.body.language = language;
+        req.app.locals.language = language
         next();
     } catch (error:any) {
         errorResponse(res,error,401)

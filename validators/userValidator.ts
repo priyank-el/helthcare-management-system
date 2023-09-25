@@ -7,7 +7,7 @@ const registerUserValidator = (req:Request,res:Response,next:any) => {
         fullname:'required|string',
         email:'required|isUniqueemail:User,email',
         password:'required|string',
-        role:'required|string'
+        type:'required'
     }
     validation.validaeWithCallback(registerUser , req , res , next)
 }
