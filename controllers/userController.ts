@@ -173,7 +173,7 @@ const updatePatientsDetails = async (req: Request, res: Response) => {
     const current_condition: string = req.body.current_condition;
     const image = req.file?.filename
 
-    const patient = await Patient.findOne({email:user.email})
+    const patient = await Patient.findOne({ email: user.email })
     if (!patient) throw "doctor not found.."
     if (patient?.image) {
       const image = patient.image;
@@ -201,7 +201,7 @@ const updatePatientsDetails = async (req: Request, res: Response) => {
     })
 
     successResponse(res, req.app.locals.language.UPDATE_PATIENT, 200)
-  } catch (error:any) {
+  } catch (error: any) {
     console.log(error.message);
     errorResponse(res, error, 400)
   }
@@ -347,10 +347,12 @@ const allDoctors = async (req: Request, res: Response) => {
       })
     }
     const allDoctor = await Doctor.aggregate([
-      { $unwind: { 
-        path: "$feedback",
-        preserveNullAndEmptyArrays:true
-       } },
+      {
+        $unwind: {
+          path: "$feedback",
+          preserveNullAndEmptyArrays: true
+        }
+      },
       // Do the lookup matching
       {
         "$lookup": {
@@ -360,37 +362,39 @@ const allDoctors = async (req: Request, res: Response) => {
           "as": "feedback.patient"
         }
       },
-      { $unwind: { 
-        path: "$feedback.patient",
-        preserveNullAndEmptyArrays:true
-       } },
-    
+      {
+        $unwind: {
+          path: "$feedback.patient",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+
       {
         "$group": {
           "_id": "$_id",
-          "name":{"$first":"$name"},
-          "email":{"$first":"$email"},
-          "degree":{"$first":"$degree"},
-          "image":{"$first":"$image"},
-          "address":{"$first":"$address"},
+          "name": { "$first": "$name" },
+          "email": { "$first": "$email" },
+          "degree": { "$first": "$degree" },
+          "image": { "$first": "$image" },
+          "address": { "$first": "$address" },
           "feedback": { "$push": "$feedback" }
         }
       },
       {
-        $project:{
-          "feedback.patientId":0,
-          "feedback.patient._id":0,
-          "feedback.patient.dob":0,
-          "feedback.patient.contact_no":0,
-          "feedback.patient.address":0,
-          "feedback.patient.allergies":0,
-          "feedback.patient.medical_history":0,
-          "feedback.patient.userId":0,
-          "feedback.patient.email":0,
-          "feedback.patient.diagnosis":0,
-          "feedback.patient.createdAt":0,
-          "feedback.patient.updatedAt":0,
-          "feedback.patient.__v":0
+        $project: {
+          "feedback.patientId": 0,
+          "feedback.patient._id": 0,
+          "feedback.patient.dob": 0,
+          "feedback.patient.contact_no": 0,
+          "feedback.patient.address": 0,
+          "feedback.patient.allergies": 0,
+          "feedback.patient.medical_history": 0,
+          "feedback.patient.userId": 0,
+          "feedback.patient.email": 0,
+          "feedback.patient.diagnosis": 0,
+          "feedback.patient.createdAt": 0,
+          "feedback.patient.updatedAt": 0,
+          "feedback.patient.__v": 0
         }
       },
       searchData
@@ -494,50 +498,59 @@ const appointmentByDoctor = async (req: Request, res: Response) => {
     const status = req.body.status;
     const _id = new mongoose.Types.ObjectId(req.body.appointId)
     const doctor = await Doctor.findOne({ email: req.body.user.email })
+    const startTime = req.body.startTime
+    const endTime = req.body.endTime
 
     const appointmentData = await ReqAppointment.findById(_id);
-    const appointments = await ReqAppointment.find();
+    const appointments = await ReqAppointment.find({
+      doctorId: doctor?._id,
+      status:"approve"
+    });
 
-    appointments.map(appoint => {
-      if (appoint?.timeDuration == req.body.timeDuration) throw "this time is already register for another apoointment.."
-    })
-    if (appointmentData?.status == "approve") throw "status already changed..";
+    for (const existing of appointments) {
+        const existingStartTime = new Date(existing.appointmentDate + ' ' + existing.startTime);
+        const existingEndTime = new Date(existing.appointmentDate + ' ' + existing.endTime);
+        const newStartTime = new Date(appointmentData?.appointmentDate + ' ' + startTime);
+        const newEndTime = new Date(appointmentData?.appointmentDate + ' ' + endTime);
 
-    else {
-      const timeDuration = req.body.timeDuration
-        ? await ReqAppointment.findOneAndUpdate({ _id }, {
-          status,
-          timeDuration: req.body.timeDuration
-        })
-        : await ReqAppointment.findOneAndUpdate({ _id }, {
-          status
-        })
-    }
+        // Check if the new appointment partially overlaps with an existing one
+        if ((newStartTime < existingStartTime && newEndTime < existingStartTime) || (newStartTime > existingEndTime)) 
+        {
+          await ReqAppointment.findOneAndUpdate({ _id }, {
+            status,
+            startTime,
+            endTime
+          })
+          const user = appointmentData?.patientId ? await Patient.findById(appointmentData?.patientId) : await User.findById(appointmentData?.userId)
+          const appoint = await ReqAppointment.findById(_id)
 
-    const user = appointmentData?.patientId ? await Patient.findById(appointmentData?.patientId) : await User.findById(appointmentData?.userId)
-    const appoint = await ReqAppointment.findById(_id)
+          if (appoint?.status === 'approve') {
+            const transporter = nodemailer.createTransport({
+              service: "gmail",
+              auth: {
+                user: data.ADMIN_EMAIL,
+                pass: data.ADMIN_PASS,
+              },
+            });
 
-    if (appoint?.status === 'approve') {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: data.ADMIN_EMAIL,
-          pass: data.ADMIN_PASS,
-        },
-      });
-
-      try {
-        await transporter.sendMail({
-          from: data.ADMIN_EMAIL, // sender address
-          to: user?.email, // list of receivers
-          subject: "Appointment approved ✔", // Subject line
-          text: `Dr.${doctor?.name} accept your appointment..`, // plain text body
-        });
-      } catch (error) {
-        console.log(error);
-        throw req.body.language.SOMETHING_ERROR_IN_MAIL
+            try {
+              await transporter.sendMail({
+                from: data.ADMIN_EMAIL, // sender address
+                to: user?.email, // list of receivers
+                subject: "Appointment approved ✔", // Subject line
+                text: `Dr.${doctor?.name} accept your appointment..`, // plain text body
+              });
+            } catch (error) {
+              console.log(error);
+              throw req.body.language.SOMETHING_ERROR_IN_MAIL
+            }
+          }// Overlapping appointment found
+        }
+        else {
+          throw "you cant create appointment"
+          console.log("error goes here..");
+        }
       }
-    }
     const response = {
       message: req.body.language.APPOINTMENT_EDIT_BY_DOCTOR
     }
@@ -604,19 +617,22 @@ const viewAppointmentByDoctor = async (req: Request, res: Response) => {
 const updateAppointmentByDoctor = async (req: Request, res: Response) => {
   try {
     const id = new mongoose.Types.ObjectId(req.body.id);
-    const time = req.body.timeDuration;
-    const timeDuration = time.toLowerCase().trim();
+    const startTime = req.body.startTime;
+    const endTime = req.body.endTime;
+    const startTimeDuration = startTime.toLowerCase().trim();
+    const endTimeDuration = endTime.toLowerCase().trim();
     const request = await ReqAppointment.findById(id);
     if (!request) throw req.body.language.APPOINTMENT_ERROR;
     if (request.status == "reject") throw "This appointment rejected.."
-    if (request.timeDuration == timeDuration) throw "This time already seted..";
+    if (request.startTime == startTimeDuration && request.endTime == endTimeDuration) throw "This time already seted..";
     await ReqAppointment.findByIdAndUpdate(id, {
-      timeDuration
+      startTime:startTimeDuration,
+      endTime:endTimeDuration
     });
     try {
       await Notification.create({
         patientId: request?.patientId,
-        notification: `Your appointment time change by doctor it is : ${timeDuration} `
+        notification: `Your appointment time change by doctor it is : ${startTimeDuration}:${endTimeDuration} `
       })
     } catch (error) {
       throw error;
@@ -642,7 +658,8 @@ const deleteAppointmentByDoctor = async (req: Request, res: Response) => {
     }
     else {
       await ReqAppointment.findByIdAndUpdate(id, {
-        timeDuration: null,
+        startTime: null,
+        endTime:null,
         status: 'reject',
         notesForRejection: notes
       })
@@ -688,7 +705,7 @@ const deleteAppointmentByDoctor = async (req: Request, res: Response) => {
 const prescriptionByDoctor = async (req: Request, res: Response) => {
   try {
     const patientId = new mongoose.Types.ObjectId(req.body.patientId);
-    const {totalmedicine,appointmentId,notes} = req.body
+    const { totalmedicine, appointmentId, notes } = req.body
 
     const doctor = await Doctor.findOne({ email: req.body.user.email })
 
