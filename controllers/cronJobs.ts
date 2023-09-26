@@ -25,7 +25,7 @@ const sendNotification = async (id:any) => {
         notification:'you have appointment with doctor today ..'
     })
     : await Notification.create({
-        patientId:appointment?.userId,
+        userId:appointment?.userId,
         notification:'you have appointment with doctor today ..'
     })
 }

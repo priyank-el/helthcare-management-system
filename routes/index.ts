@@ -21,6 +21,7 @@ import doctorRoutes from '../routes/doctors/index';
 import adminRoute from '../routes/admin/index'
 import jwtAuth from "../middleware/jwtAuth";
 import languageAuth from "../middleware/languageAuth";
+import jwtAdminAuth from "../middleware/jwtAdminAuth";
 
 const router = express.Router();
 
@@ -39,6 +40,6 @@ const use = (fn:any) => (req:Request, res:Response, next:any) => {
 // ? <<<<<<<<<<<<<<<<<<<<<<<<<< ALL ROUTES >>>>>>>>>>>>>>>>>>>>>>>>>>>>> ? // 
 router.use('/patient',use(jwtAuth(['1'])),languageAuth,patientRoutes);
 router.use('/doctor',use(jwtAuth(['2'])),languageAuth,doctorRoutes);
-router.use('/admin-auth',languageAuth,adminRoute)
+router.use('/admin-auth',jwtAdminAuth,languageAuth,adminRoute)
 
 export default router;

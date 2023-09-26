@@ -19,11 +19,7 @@ const doctorSchema = new mongoose.Schema({
         type:String
     },
     image:{
-        type:String,
-        get: function(value:string) {
-            // Transform and return value here
-            return `http://localhost:4001/images/${value}`;
-        }
+        type:String
     },
     feedback:{
         type:[feedbackSchema],
