@@ -21,7 +21,10 @@ const reqAppointment = new mongoose.Schema({
         enum:['pending','approve','reject'],
         default:'pending'
     },
-    timeDuration:{
+    startTime:{
+        type:String
+    },
+    endTime:{
         type:String
     },
     notesForRejection:{

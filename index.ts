@@ -10,7 +10,7 @@ import { cronJobs } from './controllers/cronJobs';
 import route from './routes/index';
 // import { parse } from "express-form-data";
 
-cronJobs()
+// cronJobs()
 
 dotenv.config()
 

@@ -8,7 +8,7 @@ async function cronJobs (){
     for(let i =0;i<appointments.length;i++){
         const day = appointments[i]?.appointmentDate?.split("-")[0]
         const month = appointments[i]?.appointmentDate?.split("-")[1]
-        const hours:any = appointments[i].timeDuration?.split("AM")[0];
+        const hours:any = appointments[i].startTime;
         const erlyHours = parseInt(hours) - 1
 
         cron.schedule(`* ${erlyHours} ${day} ${month} *` , () => {
