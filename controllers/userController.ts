@@ -109,6 +109,7 @@ const loginUser = async (req: Request, res: Response) => {
     const password: string = req.body.password;
 
     const isUser = await User.findOne({ email })
+    if(isUser?.activeStatus == 0) throw "you blocked by admin"
     const pass = await bcrypt.compare(password, isUser?.password);
 
     if (!pass) throw 'password miss matched..';
@@ -440,6 +441,9 @@ const doctorDetails = async (req: Request, res: Response) => {
 
 const reqAppointmentByUser = async (req: Request, res: Response) => {
   try {
+    const user = await User.findById(req.body.user._id)
+    if(user?.activeStatus == 0) throw "you blocked by admin"
+
     const doctorId = new mongoose.Types.ObjectId(req.body.id)
     const appointmentDate = req.body.appointmentDate;
 
@@ -869,7 +873,8 @@ const emergency = async (req: Request, res: Response) => {
     const relative: string = req.body.relative;
     const contact_number: string = req.body.contact_number;
     const address = req.body.address;
-
+    const user = await User.findById(req.body.user._id)
+    if(user?.activeStatus == 0) throw "you blocked by admin"
     const isExist = await Emergency.findOne({
       userId: req.body.user._id
     })

@@ -55,18 +55,6 @@ const allPriscription = async (req:Request,res:Response) => {
         $unwind:"$doctor_data"
       },
       {
-        $project:{
-          "doctor_data.degree":0,
-          "doctor_data.address":0,
-          "doctor_data.contact":0,
-          "doctor_data.feedback":0,
-          "doctor_data.createdAt":0,
-          "doctor_data.updatedAt":0,
-          "doctor_data.__v":0,
-
-        }
-      },
-      {
         $lookup: {
           from: "patients",
           localField: "patientId",
@@ -76,13 +64,20 @@ const allPriscription = async (req:Request,res:Response) => {
       },
       {
         $unwind:"$patient"
-      },
-      // {
-      //   $project:{
-
-      //   }
-      // }
-    ]);
+      }
+    ]).project({
+      "_id":1,
+      "totalMedicine":1,
+      "appointmentId":1,
+      "notes":1,
+      "doctor_data._id":1,
+      "doctor_data.image":1,
+      "doctor_data.name":1,
+      "doctor_data.degree":1,
+      "patient._id":1,
+      "patient.nickname":1,
+      "patient.image":1
+    })
     successResponse(res,allPriscription,200)
   } catch (error) {
       errorResponse(res,error,400) 

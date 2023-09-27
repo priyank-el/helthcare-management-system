@@ -35,6 +35,7 @@ const patientsSchema = new mongoose.Schema({
     },
     image:{
         type:String,
+        default:null,
         get: function(value:string) {
             // Transform and return value here
             return `http://localhost:4001/images/${value}`;
