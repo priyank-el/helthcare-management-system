@@ -109,6 +109,7 @@ const loginUser = async (req: Request, res: Response) => {
     const password: string = req.body.password;
 
     const isUser = await User.findOne({ email })
+    if(isUser?.activeStatus == 0) throw "you blocked by admin"
     const pass = await bcrypt.compare(password, isUser?.password);
 
     if (!pass) throw 'password miss matched..';
@@ -222,20 +223,19 @@ const viewPatient = async (req: Request, res: Response) => {
     const patient = await Patient.findOne({ email: req.body.user.email })
     const isHistory = await MedicalHistory.findOne({ patientId: patient?._id })
     const dateAndTime = patient?.createdAt;
-    const newFormate = moment(dateAndTime).format('D MMMM YYYY HH:mm');
-    console.log(newFormate);
+    // const newFormate = moment(dateAndTime).format('D MMMM YYYY HH:mm');
     if (isHistory) {
       await Patient.findOneAndUpdate({ email: req.body.user.email }, { medical_history: isHistory })
         .select(['nickname', 'diagnosis', 'contact_no', 'address', 'allergies', 'medical_history', 'current_condition', 'email', 'dob'])
 
       const patient = await Patient.findOne({ email: req.body.user.email })
-        .select(['nickname', 'diagnosis', 'contact_no', 'address', 'allergies', 'medical_history', 'current_condition', 'email', 'dob'])
+        .select(['nickname', 'diagnosis', 'image' , 'contact_no', 'address', 'allergies', 'medical_history', 'current_condition', 'email', 'dob'])
 
       successResponse(res, patient, 200);
     }
     else {
       const patient = await Patient.findOne({ email: req.body.user.email })
-        .select(['nickname', 'diagnosis', 'contact_no', 'address', 'allergies', 'medical_history', 'current_condition', 'email', 'dob'])
+        .select(['nickname', 'diagnosis' , 'image' , 'contact_no', 'address', 'allergies', 'medical_history', 'current_condition', 'email', 'dob'])
 
       successResponse(res, patient, 200);
     }
@@ -441,6 +441,9 @@ const doctorDetails = async (req: Request, res: Response) => {
 
 const reqAppointmentByUser = async (req: Request, res: Response) => {
   try {
+    const user = await User.findById(req.body.user._id)
+    if(user?.activeStatus == 0) throw "you blocked by admin"
+
     const doctorId = new mongoose.Types.ObjectId(req.body.id)
     const appointmentDate = req.body.appointmentDate;
 
@@ -461,6 +464,7 @@ const reqAppointmentByPatient = async (req: Request, res: Response) => {
     const appointmentDate = req.body.appointmentDate;
     const patient = await Patient.findOne({ email: req.body.user.email })
     const isDoctor = await Doctor.findById(doctorId)
+    console.log(isDoctor);
     if (!isDoctor) throw "This doctor not in our staff."
     const hasAlready = await ReqAppointment.findOne({
       doctorId,
@@ -506,7 +510,13 @@ const appointmentByDoctor = async (req: Request, res: Response) => {
       doctorId: doctor?._id,
       status:"approve"
     });
-
+    if(appointmentData?.status == "pending"){
+      await ReqAppointment.findByIdAndUpdate(appointmentData._id,{
+        status:"approve",
+        startTime,
+        endTime
+      })
+    }
     for (const existing of appointments) {
         const existingStartTime = new Date(existing.appointmentDate + ' ' + existing.startTime);
         const existingEndTime = new Date(existing.appointmentDate + ' ' + existing.endTime);
@@ -863,7 +873,8 @@ const emergency = async (req: Request, res: Response) => {
     const relative: string = req.body.relative;
     const contact_number: string = req.body.contact_number;
     const address = req.body.address;
-
+    const user = await User.findById(req.body.user._id)
+    if(user?.activeStatus == 0) throw "you blocked by admin"
     const isExist = await Emergency.findOne({
       userId: req.body.user._id
     })
@@ -871,11 +882,10 @@ const emergency = async (req: Request, res: Response) => {
     if (isExist) throw req.body.language.PATIENT_ALREADY_EXIST
 
     await Emergency.create({
-      userId: req.body.user._id,
       address,
       contact_number,
       relative,
-      patientId: req.body.patient._id
+      patientId: req.body.user._id
     })
 
     successResponse(res, req.body.language.EMERGENCY_CREATED, 200)
@@ -949,8 +959,8 @@ const updateDoctorProfile = async (req: Request, res: Response) => {
     if (!doctor) throw "doctor not found.."
     if (doctor?.image) {
       const image = doctor.image;
-      const c_image = image.split("images/")[1]
-      fs.unlink(`public/images/${c_image}`, (e) => {
+      console.log(image);
+      fs.unlink(`public/images/${image}`, (e) => {
         if (e) {
           console.log(e);
         } else {

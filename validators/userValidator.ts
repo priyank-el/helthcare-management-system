@@ -112,7 +112,8 @@ const seduleAppointmentValidator = (req:Request,res:Response,next:any) => {
 const updateAppointmentValidator = (req:Request,res:Response,next:any) => {
     const updateAppointment = {
         id:'required|string',
-        timeDuration:'required'
+        startTime:'required',
+        endTime:'required'
     }
     validation.validaeWithCallback(updateAppointment , req , res , next)
 }

@@ -9,6 +9,10 @@ const notificationSchema = new mongoose.Schema({
         type:mongoose.Types.ObjectId,
         ref:'Patient'
     },
+    userId:{
+        type:mongoose.Types.ObjectId,
+        ref:'User'
+    },
     notification:{
         type:String
     }

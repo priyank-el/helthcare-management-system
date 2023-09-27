@@ -42,7 +42,42 @@ const login = async (req: Request, res: Response) => {
 
 const allPriscription = async (req:Request,res:Response) => {
   try {
-    const allPriscription = await Priscription.find();
+    const allPriscription = await Priscription.aggregate([
+      {
+        $lookup: {
+          from: "doctors",
+          localField: "doctorId",
+          foreignField: "_id",
+          as: "doctor_data",
+        }
+      },
+      {
+        $unwind:"$doctor_data"
+      },
+      {
+        $lookup: {
+          from: "patients",
+          localField: "patientId",
+          foreignField: "_id",
+          as: "patient",
+        }
+      },
+      {
+        $unwind:"$patient"
+      }
+    ]).project({
+      "_id":1,
+      "totalMedicine":1,
+      "appointmentId":1,
+      "notes":1,
+      "doctor_data._id":1,
+      "doctor_data.image":1,
+      "doctor_data.name":1,
+      "doctor_data.degree":1,
+      "patient._id":1,
+      "patient.nickname":1,
+      "patient.image":1
+    })
     successResponse(res,allPriscription,200)
   } catch (error) {
       errorResponse(res,error,400) 

@@ -1,6 +1,6 @@
 import express,{} from "express";
-import { addAdmin, addMedications, allMedications, allUsers, blockPatient, login, updateMedications } from "../../controllers/adminController";
-import { allPriscription } from "../../controllers/userController";
+import { addAdmin, addMedications, allMedications, allPriscription, allUsers, blockPatient, login, updateMedications } from "../../controllers/adminController";
+
 import { addMedicationValidator } from "../../validators/userValidator";
 
 const router = express.Router()
