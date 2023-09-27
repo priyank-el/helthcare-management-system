@@ -1,7 +1,7 @@
 
-import * as Validator from 'validatorjs';
-import { Request,Response } from 'express';
-import mongoose from 'mongoose';
+import * as Validator from 'validatorjs'
+import { Request,Response } from 'express'
+import mongoose from 'mongoose'
 
 Validator.registerAsync('isUniqueemail', async function (username , attribute , req , passes) {
   

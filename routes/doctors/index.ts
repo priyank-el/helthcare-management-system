@@ -1,4 +1,4 @@
-import express,{} from "express";
+import express from "express"
 import { 
     appointmentByDoctor, 
     deleteAppointmentByDoctor, 
@@ -8,16 +8,16 @@ import {
     viewAllPateints, 
     viewAppointmentByDoctor,
     updateDoctorProfile
-} from "../../controllers/userController";
+} from "../../controllers/userController"
 import { 
     deleteAppointmentValidator,
     registerDoctorValidator, 
     seduleAppointmentValidator, 
     updateAppointmentValidator,
     makePriscriptionValidator 
-} from "../../validators/userValidator";
-import multer from 'multer';
-import { allMedications } from "../../controllers/adminController";
+} from "../../validators/userValidator"
+import multer from 'multer'
+import { allMedications } from "../../controllers/adminController"
 
 const router = express.Router()
 
@@ -47,4 +47,4 @@ router.put('/delete-appointment',deleteAppointmentValidator,deleteAppointmentByD
 
 router.post('/priscription',makePriscriptionValidator,prescriptionByDoctor)
 
-export default router;
+export default router

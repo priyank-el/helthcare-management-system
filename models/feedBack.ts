@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const feedbackSchema = new mongoose.Schema({
     patientId:{
@@ -14,8 +14,8 @@ const feedbackSchema = new mongoose.Schema({
     }
 });
 
-const Feedback = mongoose.model('Feedback',feedbackSchema);
+const Feedback = mongoose.model('Feedback',feedbackSchema)
 export{
     feedbackSchema
 }
-export default Feedback;
+export default Feedback

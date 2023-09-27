@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
-import Medicine from "./medicine";
+import mongoose from "mongoose"
+import Medicine from "./medicine"
 
 const priscriptionSchema = new mongoose.Schema({
     totalMedicine:{
@@ -22,5 +22,5 @@ const priscriptionSchema = new mongoose.Schema({
     }
 });
 
-const Priscription = mongoose.model('Priscription',priscriptionSchema);
+const Priscription = mongoose.model('Priscription',priscriptionSchema)
 export default Priscription;

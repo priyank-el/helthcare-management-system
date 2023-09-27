@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const emergencySchema = new mongoose.Schema({
     patientId:{
@@ -18,4 +18,4 @@ const emergencySchema = new mongoose.Schema({
 );
 
 const Emergency = mongoose.model('Emergency',emergencySchema)
-export default Emergency;
+export default Emergency

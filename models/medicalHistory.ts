@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const medicalHistorySchema = new mongoose.Schema({
     history:{
@@ -10,5 +10,5 @@ const medicalHistorySchema = new mongoose.Schema({
     }
 });
 
-const MedicalHistory = mongoose.model('MedicalHistory',medicalHistorySchema);
+const MedicalHistory = mongoose.model('MedicalHistory',medicalHistorySchema)
 export default MedicalHistory

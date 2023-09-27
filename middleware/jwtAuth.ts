@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken')
 
-import { Request,Response } from "express";
-import { errorResponse } from "../handler/responseHandler";
-import User from "../models/user";
-import data from "../security/keys";
+import { Request,Response } from "express"
+import { errorResponse } from "../handler/responseHandler"
+import User from "../models/user"
+import data from "../security/keys"
 
 const jwtAuth = (type:any) => async (req:Request, res:Response, next:any) => {
     try {
@@ -32,4 +32,4 @@ const jwtAuth = (type:any) => async (req:Request, res:Response, next:any) => {
         errorResponse(res,error,401)
     }
 }
-export default jwtAuth;
+export default jwtAuth

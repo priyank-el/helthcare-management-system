@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken')
 
-import { Request,Response } from "express";
-import { errorResponse } from "../handler/responseHandler";
-import data from "../security/keys";
-import Admin from "../models/admin";
+import { Request,Response } from "express"
+import { errorResponse } from "../handler/responseHandler"
+import data from "../security/keys"
+import Admin from "../models/admin"
 
 const jwtAdminAuth = async (req:Request, res:Response, next:any) => {
     try {
@@ -27,4 +27,4 @@ const jwtAdminAuth = async (req:Request, res:Response, next:any) => {
         errorResponse(res,error,401)
     }
 }
-export default jwtAdminAuth;
+export default jwtAdminAuth

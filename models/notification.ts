@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const notificationSchema = new mongoose.Schema({
     doctorId:{
@@ -20,5 +20,5 @@ const notificationSchema = new mongoose.Schema({
     timestamps:true
 });
 
-const Notification = mongoose.model('Notification', notificationSchema);
-export default Notification;
+const Notification = mongoose.model('Notification', notificationSchema)
+export default Notification

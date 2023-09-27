@@ -1,5 +1,5 @@
-import mongoose from "mongoose";
-import { feedbackSchema } from "./feedBack";
+import mongoose from "mongoose"
+import { feedbackSchema } from "./feedBack"
 
 const doctorSchema = new mongoose.Schema({
     name:{

@@ -1,11 +1,10 @@
-import express,{ Express } from "express";
+import express from "express"
 import { 
     emergencyValidator,
     feedbackValidator,
     registerPatientValidator, 
-    requestAppointmentValidator, 
-    updatePatientValidator
- } from "../../validators/userValidator";
+    requestAppointmentValidator
+ } from "../../validators/userValidator"
 import { 
     emergency, 
     feedbackBypatient, 
@@ -16,17 +15,17 @@ import {
     viewPatient,
     updateFeedback,
     priscription
-} from "../../controllers/userController";
-import multer from "multer";
+} from "../../controllers/userController"
+import multer from "multer"
 
-const router = express.Router();
+const router = express.Router()
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
       cb(null, 'public/images')
     },
     filename: function (req, file, cb) {
-      cb(null, new Date().getTime() + '_' + file.originalname);
+      cb(null, new Date().getTime() + '_' + file.originalname)
     }
   })
   
@@ -38,12 +37,12 @@ router.post('/patient',registerPatientValidator,patiants)
 router.put('/update-patient',upload.single('image'),updatePatientsDetails)
 
 router.get('/view-patient',viewPatient)
-router.get('/medical-history',medicalHistory);
+router.get('/medical-history',medicalHistory)
 router.get("/priscription",priscription)
 
 router.post('/apply-appointment',requestAppointmentValidator,reqAppointmentByPatient)
 router.post('/emergency',emergencyValidator,emergency)
-router.post('/feedback',feedbackValidator,feedbackBypatient);
+router.post('/feedback',feedbackValidator,feedbackBypatient)
 router.put("/update-feedback",updateFeedback)
 
 

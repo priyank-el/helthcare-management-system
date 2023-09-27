@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const medicationsSchema = new mongoose.Schema({
     name:{
@@ -6,5 +6,5 @@ const medicationsSchema = new mongoose.Schema({
     }
 });
 
-const Medications = mongoose.model('Medication',medicationsSchema);
-export default Medications;
+const Medications = mongoose.model('Medication',medicationsSchema)
+export default Medications

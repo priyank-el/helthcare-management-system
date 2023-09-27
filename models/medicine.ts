@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const medicine = new mongoose.Schema({
     medications:
@@ -12,4 +12,4 @@ const medicine = new mongoose.Schema({
     dignosis:{type:String}
    });
 
-export default medicine;
+export default medicine
