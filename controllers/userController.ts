@@ -17,7 +17,6 @@ import MedicalHistory from '../models/medicalHistory';
 import Feedback from "../models/feedBack";
 import Emergency from "../models/emergency";
 import Notification from "../models/notification";
-// import Role from "../models/roles";
 import moment from "moment";
 
 const TokenGenerator = require("token-generator")({
@@ -109,7 +108,7 @@ const loginUser = async (req: Request, res: Response) => {
     const password: string = req.body.password;
 
     const isUser = await User.findOne({ email })
-    if(isUser?.activeStatus == 0) throw "you blocked by admin"
+    if (isUser?.activeStatus == 0) throw "you blocked by admin"
     const pass = await bcrypt.compare(password, isUser?.password);
 
     if (!pass) throw 'password miss matched..';
@@ -229,13 +228,13 @@ const viewPatient = async (req: Request, res: Response) => {
         .select(['nickname', 'diagnosis', 'contact_no', 'address', 'allergies', 'medical_history', 'current_condition', 'email', 'dob'])
 
       const patient = await Patient.findOne({ email: req.body.user.email })
-        .select(['nickname', 'diagnosis', 'image' , 'contact_no', 'address', 'allergies', 'medical_history', 'current_condition', 'email', 'dob'])
+        .select(['nickname', 'diagnosis', 'image', 'contact_no', 'address', 'allergies', 'medical_history', 'current_condition', 'email', 'dob'])
 
       successResponse(res, patient, 200);
     }
     else {
       const patient = await Patient.findOne({ email: req.body.user.email })
-        .select(['nickname', 'diagnosis' , 'image' , 'contact_no', 'address', 'allergies', 'medical_history', 'current_condition', 'email', 'dob'])
+        .select(['nickname', 'diagnosis', 'image', 'contact_no', 'address', 'allergies', 'medical_history', 'current_condition', 'email', 'dob'])
 
       successResponse(res, patient, 200);
     }
@@ -442,7 +441,7 @@ const doctorDetails = async (req: Request, res: Response) => {
 const reqAppointmentByUser = async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.body.user._id)
-    if(user?.activeStatus == 0) throw "you blocked by admin"
+    if (user?.activeStatus == 0) throw "you blocked by admin"
 
     const doctorId = new mongoose.Types.ObjectId(req.body.id)
     const appointmentDate = req.body.appointmentDate;
@@ -508,59 +507,58 @@ const appointmentByDoctor = async (req: Request, res: Response) => {
     const appointmentData = await ReqAppointment.findById(_id);
     const appointments = await ReqAppointment.find({
       doctorId: doctor?._id,
-      status:"approve"
+      status: "approve"
     });
-    if(appointmentData?.status == "pending"){
-      await ReqAppointment.findByIdAndUpdate(appointmentData._id,{
-        status:"approve",
+    if (appointmentData?.status == "pending") {
+      await ReqAppointment.findByIdAndUpdate(appointmentData._id, {
+        status: "approve",
         startTime,
         endTime
       })
     }
     for (const existing of appointments) {
-        const existingStartTime = new Date(existing.appointmentDate + ' ' + existing.startTime);
-        const existingEndTime = new Date(existing.appointmentDate + ' ' + existing.endTime);
-        const newStartTime = new Date(appointmentData?.appointmentDate + ' ' + startTime);
-        const newEndTime = new Date(appointmentData?.appointmentDate + ' ' + endTime);
+      const existingStartTime = new Date(existing.appointmentDate + ' ' + existing.startTime);
+      const existingEndTime = new Date(existing.appointmentDate + ' ' + existing.endTime);
+      const newStartTime = new Date(appointmentData?.appointmentDate + ' ' + startTime);
+      const newEndTime = new Date(appointmentData?.appointmentDate + ' ' + endTime);
 
-        // Check if the new appointment partially overlaps with an existing one
-        if ((newStartTime < existingStartTime && newEndTime < existingStartTime) || (newStartTime > existingEndTime)) 
-        {
-          await ReqAppointment.findOneAndUpdate({ _id }, {
-            status,
-            startTime,
-            endTime
-          })
-          const user = appointmentData?.patientId ? await Patient.findById(appointmentData?.patientId) : await User.findById(appointmentData?.userId)
-          const appoint = await ReqAppointment.findById(_id)
+      // Check if the new appointment partially overlaps with an existing one
+      if ((newStartTime < existingStartTime && newEndTime < existingStartTime) || (newStartTime > existingEndTime)) {
+        await ReqAppointment.findOneAndUpdate({ _id }, {
+          status,
+          startTime,
+          endTime
+        })
+        const user = appointmentData?.patientId ? await Patient.findById(appointmentData?.patientId) : await User.findById(appointmentData?.userId)
+        const appoint = await ReqAppointment.findById(_id)
 
-          if (appoint?.status === 'approve') {
-            const transporter = nodemailer.createTransport({
-              service: "gmail",
-              auth: {
-                user: data.ADMIN_EMAIL,
-                pass: data.ADMIN_PASS,
-              },
+        if (appoint?.status === 'approve') {
+          const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: data.ADMIN_EMAIL,
+              pass: data.ADMIN_PASS,
+            },
+          });
+
+          try {
+            await transporter.sendMail({
+              from: data.ADMIN_EMAIL, // sender address
+              to: user?.email, // list of receivers
+              subject: "Appointment approved ✔", // Subject line
+              text: `Dr.${doctor?.name} accept your appointment..`, // plain text body
             });
-
-            try {
-              await transporter.sendMail({
-                from: data.ADMIN_EMAIL, // sender address
-                to: user?.email, // list of receivers
-                subject: "Appointment approved ✔", // Subject line
-                text: `Dr.${doctor?.name} accept your appointment..`, // plain text body
-              });
-            } catch (error) {
-              console.log(error);
-              throw req.body.language.SOMETHING_ERROR_IN_MAIL
-            }
-          }// Overlapping appointment found
-        }
-        else {
-          throw "you cant create appointment"
-          console.log("error goes here..");
-        }
+          } catch (error) {
+            console.log(error);
+            throw req.body.language.SOMETHING_ERROR_IN_MAIL
+          }
+        }// Overlapping appointment found
       }
+      else {
+        throw "you cant create appointment"
+        console.log("error goes here..");
+      }
+    }
     const response = {
       message: req.body.language.APPOINTMENT_EDIT_BY_DOCTOR
     }
@@ -636,8 +634,8 @@ const updateAppointmentByDoctor = async (req: Request, res: Response) => {
     if (request.status == "reject") throw "This appointment rejected.."
     if (request.startTime == startTimeDuration && request.endTime == endTimeDuration) throw "This time already seted..";
     await ReqAppointment.findByIdAndUpdate(id, {
-      startTime:startTimeDuration,
-      endTime:endTimeDuration
+      startTime: startTimeDuration,
+      endTime: endTimeDuration
     });
     try {
       await Notification.create({
@@ -669,7 +667,7 @@ const deleteAppointmentByDoctor = async (req: Request, res: Response) => {
     else {
       await ReqAppointment.findByIdAndUpdate(id, {
         startTime: null,
-        endTime:null,
+        endTime: null,
         status: 'reject',
         notesForRejection: notes
       })
@@ -874,7 +872,7 @@ const emergency = async (req: Request, res: Response) => {
     const contact_number: string = req.body.contact_number;
     const address = req.body.address;
     const user = await User.findById(req.body.user._id)
-    if(user?.activeStatus == 0) throw "you blocked by admin"
+    if (user?.activeStatus == 0) throw "you blocked by admin"
     const isExist = await Emergency.findOne({
       userId: req.body.user._id
     })
