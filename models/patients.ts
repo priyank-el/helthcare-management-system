@@ -1,50 +1,50 @@
 import mongoose from "mongoose"
 
 const patientsSchema = new mongoose.Schema({
-    nickname:{
-        type:String,
-        index:true
+    nickname: {
+        type: String,
+        index: true
     },
-    dob:{
-        type:String
+    dob: {
+        type: String
     },
-    contact_no:{
-        type:String
+    contact_no: {
+        type: String
     },
-    address:{
-        type:String
+    address: {
+        type: String
     },
-    allergies:{
-        type:Array
+    allergies: {
+        type: Array
     },
-    medical_history:{
-        type:Object
+    medical_history: {
+        type: Object
     },
-    current_condition:{
-        type:String
+    current_condition: {
+        type: String
     },
-    userId:{
-        type:mongoose.Types.ObjectId,
-        ref:'User'
+    userId: {
+        type: mongoose.Types.ObjectId,
+        ref: 'User'
     },
-    email:{
-        type:String
+    email: {
+        type: String
     },
-    diagnosis:{
-        type:String
+    diagnosis: {
+        type: String
     },
-    image:{
-        type:String,
-        default:null,
-        get: function(value:string) {
+    image: {
+        type: String,
+        default: null,
+        get: function (value: string) {
             // Transform and return value here
             return `http://localhost:4001/images/${value}`;
         }
     },
 },
-{timestamps:true})
+    { timestamps: true })
 
-patientsSchema.index({nickname:"text",contact_no:"text"})
+patientsSchema.index({ nickname: "text", contact_no: "text" })
 
-const Patient = mongoose.model('Patient',patientsSchema)
+const Patient = mongoose.model('Patient', patientsSchema)
 export default Patient

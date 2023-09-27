@@ -1,15 +1,15 @@
-import express,{ Request, Response } from "express"
-import { 
+import express, { Request, Response } from "express"
+import {
     emergencyValidator,
     loginUserValidator,
     registerUserValidator
 } from "../validators/userValidator"
 
-import { 
+import {
     allDoctors,
     emergency,
     loginUser,
-    registerUser, 
+    registerUser,
     reqAppointmentByUser,
     verifyotp
 } from "../controllers/userController"
@@ -23,21 +23,21 @@ import jwtAdminAuth from "../middleware/jwtAdminAuth"
 
 const router = express.Router()
 
-router.post('/register',registerUserValidator,registerUser)
-router.post('/verify',verifyotp)
-router.post('/login',loginUserValidator,loginUser)
+router.post('/register', registerUserValidator, registerUser)
+router.post('/verify', verifyotp)
+router.post('/login', loginUserValidator, loginUser)
 
-router.get('/view-all-doctors',allDoctors)
-router.post('/apply-appointment',jwtAuth,languageAuth,reqAppointmentByUser)
-router.post('/emergency',jwtAuth,emergencyValidator,languageAuth,emergency)
+router.get('/view-all-doctors', allDoctors)
+router.post('/apply-appointment', jwtAuth, languageAuth, reqAppointmentByUser)
+router.post('/emergency', jwtAuth, emergencyValidator, languageAuth, emergency)
 
-const use = (fn:any) => (req:Request, res:Response, next:any) => {
+const use = (fn: any) => (req: Request, res: Response, next: any) => {
     Promise.resolve(fn(req, res, next)).catch(next)
-  }
+}
 
 // ? <<<<<<<<<<<<<<<<<<<<<<<<<< ALL ROUTES >>>>>>>>>>>>>>>>>>>>>>>>>>>>> ? // 
-router.use('/patient',use(jwtAuth(['1'])),languageAuth,patientRoutes)
-router.use('/doctor',use(jwtAuth(['2'])),languageAuth,doctorRoutes)
-router.use('/admin-auth',jwtAdminAuth,languageAuth,adminRoute)
+router.use('/patient', use(jwtAuth(['1'])), languageAuth, patientRoutes)
+router.use('/doctor', use(jwtAuth(['2'])), languageAuth, doctorRoutes)
+router.use('/admin-auth', jwtAdminAuth, languageAuth, adminRoute)
 
 export default router;
