@@ -1,35 +1,35 @@
-import mongoose from "mongoose";
-import { feedbackSchema } from "./feedBack";
+import mongoose from "mongoose"
+import { feedbackSchema } from "./feedBack"
 
 const doctorSchema = new mongoose.Schema({
-    name:{
-        type:String
+    name: {
+        type: String
     },
-    email:{
-        type:String
+    email: {
+        type: String
     },
-    degree:{
-        type:String,
-        enum:['MBBS','MD','MS','SERGEN']
+    degree: {
+        type: String,
+        enum: ['MBBS', 'MD', 'MS', 'SERGEN']
     },
-    address:{
-        type:String
+    address: {
+        type: String
     },
-    contact:{
-        type:String
+    contact: {
+        type: String
     },
-    image:{
-        type:String,
-        default:null,
+    image: {
+        type: String,
+        default: null,
     },
-    feedback:{
-        type:[feedbackSchema],
-        default:null
+    feedback: {
+        type: [feedbackSchema],
+        default: null
     }
-},{
-    toJSON:{getters:true},
-    timestamps:true
+}, {
+    toJSON: { getters: true },
+    timestamps: true
 });
 
-const Doctor = mongoose.model('Doctor',doctorSchema)
+const Doctor = mongoose.model('Doctor', doctorSchema)
 export default Doctor

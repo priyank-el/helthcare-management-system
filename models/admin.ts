@@ -1,23 +1,23 @@
-import mongoose from "mongoose";
+import mongoose from "mongoose"
 
 const adminSchema = new mongoose.Schema({
-    name:{
-        type:String
+    name: {
+        type: String
     },
-    email:{
-        type:String
+    email: {
+        type: String
     },
-    password:{
-        type:String
+    password: {
+        type: String
     },
-    image:{
-        type:String,
-        get: function(value:string) {
+    image: {
+        type: String,
+        get: function (value: string) {
             // Transform and return value here
             return `http://localhost:4001/images/${value}`;
         }
     }
 });
 
-const Admin = mongoose.model('Admin',adminSchema);
-export default Admin;
+const Admin = mongoose.model('Admin', adminSchema)
+export default Admin
