@@ -5,16 +5,16 @@ import { addMedicationValidator } from "../../validators/userValidator"
 
 const router = express.Router()
 
-router.post('/register',addAdmin)
-router.post('/login',login)
+router.post('/register', addAdmin)
+router.post('/login', login)
 
-router.get('/get-priscription',allPriscription)
-router.get('/medications',allMedications)
-router.get("/all-users",allUsers)
+router.get('/get-priscription', allPriscription)
+router.get('/medications', allMedications)
+router.get("/all-users", allUsers)
 
-router.post('/add-medication',addMedicationValidator,addMedications)
-router.post('/update-medication',updateMedications)
+router.post('/add-medication', addMedicationValidator, addMedications)
+router.post('/update-medication', updateMedications)
 
-router.post("/block-user",blockPatient)
+router.post("/block-user", blockPatient)
 
 export default router

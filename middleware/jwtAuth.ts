@@ -1,21 +1,21 @@
 const jwt = require('jsonwebtoken')
 
-import { Request,Response } from "express"
+import { Request, Response } from "express"
 import { errorResponse } from "../handler/responseHandler"
 import User from "../models/user"
 import data from "../security/keys"
 
-const jwtAuth = (type:any) => async (req:Request, res:Response, next:any) => {
+const jwtAuth = (type: any) => async (req: Request, res: Response, next: any) => {
     try {
         const authoazationToken = req.headers.authorization;
         const token = authoazationToken?.split(" ")[1]
-        let decodedToken = await jwt.verify(token, data.SECRET_KEY)            
+        let decodedToken = await jwt.verify(token, data.SECRET_KEY)
 
         if (!decodedToken) {
             throw 'Token not valid...'
         }
 
-        const userRecord = await User.findOne({ email :  decodedToken.email})
+        const userRecord = await User.findOne({ email: decodedToken.email })
 
         if (!userRecord) {
             throw 'User not found...'
@@ -23,13 +23,13 @@ const jwtAuth = (type:any) => async (req:Request, res:Response, next:any) => {
         const tokenType = decodedToken.type;
         const userType = tokenType.toString();
         const hasPermission = type.includes(userType)
-        if(!hasPermission) throw 'You can not access this url..'
+        if (!hasPermission) throw 'You can not access this url..'
         req.body.user = userRecord
         req.app.locals.user = userRecord
         next()
-    } catch (error:any) {
+    } catch (error: any) {
         console.log(error.message);
-        errorResponse(res,error,401)
+        errorResponse(res, error, 401)
     }
 }
 export default jwtAuth
